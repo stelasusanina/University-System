@@ -1,13 +1,249 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  output   = "../generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique @db.VarChar(200)
+  password  String   @db.VarChar(255)
+  role      UserRole
+  studentId Int?     @unique
+  professorId Int?   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student   Student?   @relation(fields: [studentId], references: [id])
+  professor Professor? @relation(fields: [professorId], references: [id])
+}
+
+model Faculty {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique @db.VarChar(200)
+  code        String      @unique @db.VarChar(10)
+  description String?     @db.Text
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  specialties Specialty[]
+  professors  Professor[]
+}
+
+model Specialty {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(200)
+  code      String   @unique @db.VarChar(20)
+  degree    Degree   @default(BACHELOR)
+  years     Int      @default(4)
+  facultyId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  faculty  Faculty   @relation(fields: [facultyId], references: [id])
+  students Student[]
+  courses  Course[]
+}
+
+model Student {
+  id            Int      @id @default(autoincrement())
+  facultyNumber String   @unique @db.VarChar(20)
+  firstName     String   @db.VarChar(100)
+  lastName      String   @db.VarChar(100)
+  email         String   @unique @db.VarChar(200)
+  phone         String?  @db.VarChar(20)
+  year          Int
+  group         Int      @default(1)
+  status        StudentStatus @default(ACTIVE)
+  specialtyId   Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  specialty   Specialty    @relation(fields: [specialtyId], references: [id])
+  enrollments Enrollment[]
+  user        User?
+}
+
+model Professor {
+  id        Int      @id @default(autoincrement())
+  firstName String   @db.VarChar(100)
+  lastName  String   @db.VarChar(100)
+  email     String   @unique @db.VarChar(200)
+  phone     String?  @db.VarChar(20)
+  title     AcademicTitle @default(ASSISTANT)
+  facultyId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  faculty   Faculty    @relation(fields: [facultyId], references: [id])
+  courses   Course[]
+  schedules Schedule[]
+  channels  Channel[]
+  user      User?
+}
+
+model Course {
+  id          Int        @id @default(autoincrement())
+  name        String     @db.VarChar(200)
+  code        String     @unique @db.VarChar(20)
+  description String?    @db.Text
+  credits     Int
+  semester    Int
+  type        CourseType @default(MANDATORY)
+  specialtyId Int
+  professorId Int
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  specialty   Specialty    @relation(fields: [specialtyId], references: [id])
+  professor   Professor    @relation(fields: [professorId], references: [id])
+  enrollments Enrollment[]
+  schedules   Schedule[]
+  channels    Channel[]
+}
+
+model Semester {
+  id        Int          @id @default(autoincrement())
+  name      String       @db.VarChar(50)
+  year      Int
+  period    SemesterPeriod
+  startDate DateTime
+  endDate   DateTime
+  isCurrent Boolean      @default(false)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  enrollments Enrollment[]
+  schedules   Schedule[]
+}
+
+model Enrollment {
+  id         Int              @id @default(autoincrement())
+  studentId  Int
+  courseId   Int
+  semesterId Int
+  grade      Float?
+  status     EnrollmentStatus @default(ENROLLED)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  student  Student  @relation(fields: [studentId], references: [id])
+  course   Course   @relation(fields: [courseId], references: [id])
+  semester Semester @relation(fields: [semesterId], references: [id])
+
+  @@unique([studentId, courseId, semesterId])
+}
+
+model Schedule {
+  id          Int      @id @default(autoincrement())
+  courseId    Int
+  professorId Int
+  semesterId  Int
+  dayOfWeek   DayOfWeek
+  startTime   String   @db.VarChar(5)
+  endTime     String   @db.VarChar(5)
+  room        String   @db.VarChar(50)
+  type        LessonType @default(LECTURE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course    Course    @relation(fields: [courseId], references: [id])
+  professor Professor @relation(fields: [professorId], references: [id])
+  semester  Semester  @relation(fields: [semesterId], references: [id])
+}
+
+model Channel {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(200)
+  description String?  @db.Text
+  courseId     Int?
+  professorId Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course        Course?        @relation(fields: [courseId], references: [id])
+  professor     Professor      @relation(fields: [professorId], references: [id])
+  announcements Announcement[]
+}
+
+model Announcement {
+  id        Int              @id @default(autoincrement())
+  title     String           @db.VarChar(300)
+  content   String           @db.Text
+  type      AnnouncementType @default(INFO)
+  channelId Int
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  channel Channel @relation(fields: [channelId], references: [id])
+}
+
+enum AnnouncementType {
+  INFO
+  CANCELLATION
+  DELAY
+  ROOM_CHANGE
+  URGENT
+}
+
+enum UserRole {
+  PROFESSOR
+  ASSOCIATE_PROFESSOR
+  SENIOR_ASSISTANT
+  ASSISTANT
+  STUDENT
+}
+
+enum Degree {
+  BACHELOR
+  MASTER
+  DOCTORATE
+}
+
+enum StudentStatus {
+  ACTIVE
+  GRADUATED
+  SUSPENDED
+  DROPPED
+}
+
+enum AcademicTitle {
+  ASSISTANT
+  SENIOR_ASSISTANT
+  ASSOCIATE_PROFESSOR
+  PROFESSOR
+}
+
+enum CourseType {
+  MANDATORY
+  ELECTIVE
+}
+
+enum SemesterPeriod {
+  WINTER
+  SUMMER
+}
+
+enum EnrollmentStatus {
+  ENROLLED
+  PASSED
+  FAILED
+  WITHDRAWN
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+}
+
+enum LessonType {
+  LECTURE
+  SEMINAR_EXERCISE
+  LAB_EXERCISE
 }
