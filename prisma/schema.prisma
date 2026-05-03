@@ -13,12 +13,12 @@ model User {
   password  String   @db.VarChar(255)
   role      UserRole
   studentId Int?     @unique
-  professorId Int?   @unique
+  academicStaffId Int?   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   student   Student?   @relation(fields: [studentId], references: [id])
-  professor Professor? @relation(fields: [professorId], references: [id])
+  academicStaff AcademicStaff? @relation(fields: [academicStaffId], references: [id])
 }
 
 model Faculty {
@@ -30,7 +30,7 @@ model Faculty {
   updatedAt   DateTime    @updatedAt
 
   specialties Specialty[]
-  professors  Professor[]
+  academicStaffMembers  AcademicStaff[]
 }
 
 model Specialty {
@@ -53,7 +53,6 @@ model Student {
   facultyNumber String   @unique @db.VarChar(20)
   firstName     String   @db.VarChar(100)
   lastName      String   @db.VarChar(100)
-  email         String   @unique @db.VarChar(200)
   phone         String?  @db.VarChar(20)
   year          Int
   group         Int      @default(1)
@@ -67,16 +66,16 @@ model Student {
   user        User?
 }
 
-model Professor {
-  id        Int      @id @default(autoincrement())
-  firstName String   @db.VarChar(100)
-  lastName  String   @db.VarChar(100)
-  email     String   @unique @db.VarChar(200)
-  phone     String?  @db.VarChar(20)
-  title     AcademicTitle @default(ASSISTANT)
-  facultyId Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model AcademicStaff {
+  id          Int      @id @default(autoincrement())
+  staffNumber String   @unique @db.VarChar(20)
+  firstName   String   @db.VarChar(100)
+  lastName    String   @db.VarChar(100)
+  phone       String?  @db.VarChar(20)
+  title       AcademicTitle @default(ASSISTANT)
+  facultyId   Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   faculty   Faculty    @relation(fields: [facultyId], references: [id])
   courses   Course[]
@@ -94,12 +93,12 @@ model Course {
   semester    Int
   type        CourseType @default(MANDATORY)
   specialtyId Int
-  professorId Int
+  academicStaffId Int
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
   specialty   Specialty    @relation(fields: [specialtyId], references: [id])
-  professor   Professor    @relation(fields: [professorId], references: [id])
+  academicStaff   AcademicStaff    @relation(fields: [academicStaffId], references: [id])
   enrollments Enrollment[]
   schedules   Schedule[]
   channels    Channel[]
@@ -140,7 +139,7 @@ model Enrollment {
 model Schedule {
   id          Int      @id @default(autoincrement())
   courseId    Int
-  professorId Int
+  academicStaffId Int
   semesterId  Int
   dayOfWeek   DayOfWeek
   startTime   String   @db.VarChar(5)
@@ -151,7 +150,7 @@ model Schedule {
   updatedAt   DateTime @updatedAt
 
   course    Course    @relation(fields: [courseId], references: [id])
-  professor Professor @relation(fields: [professorId], references: [id])
+  academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
   semester  Semester  @relation(fields: [semesterId], references: [id])
 }
 
@@ -160,12 +159,12 @@ model Channel {
   name        String   @db.VarChar(200)
   description String?  @db.Text
   courseId     Int?
-  professorId Int
+  academicStaffId Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   course        Course?        @relation(fields: [courseId], references: [id])
-  professor     Professor      @relation(fields: [professorId], references: [id])
+  academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
   announcements Announcement[]
 }
 
