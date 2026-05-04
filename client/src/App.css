@@ -78,6 +78,8 @@ button[type="submit"]:disabled {
 
 .dashboard-container {
   padding: 1rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .dashboard-header {
@@ -102,4 +104,261 @@ button[type="submit"]:disabled {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.program-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+}
+
+.program-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.student-card p {
+  margin: 0.5rem 0;
+}
+
+.test-location-button {
+  margin-top: 1rem;
+  padding: 0.7rem 1rem;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.test-location-button:hover {
+  background: #1d4ed8;
+}
+
+.course-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.course-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.course-header h3 {
+  margin: 0;
+}
+
+.course-header p,
+.course-lecturer {
+  color: #4b5563;
+}
+
+.course-status {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.schedule-item {
+  display: grid;
+  grid-template-columns: 120px 130px 100px 1fr;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.timetable-wrapper {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.timetable-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 880px;
+}
+
+.timetable-table th,
+.timetable-table td {
+  border: 1px solid #e5e7eb;
+  vertical-align: top;
+}
+
+.timetable-table th {
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-weight: 700;
+  padding: 0.9rem;
+  text-align: left;
+}
+
+.timetable-table td {
+  background: #ffffff;
+  padding: 0.75rem;
+}
+
+.time-cell {
+  background: #f8fafc !important;
+  min-width: 110px;
+}
+
+.time-cell strong,
+.time-cell span {
+  display: block;
+}
+
+.time-cell span {
+  color: #64748b;
+  margin-top: 0.2rem;
+}
+
+.timetable-entry {
+  background: #f8fbff;
+  border-left: 4px solid #2563eb;
+  border-radius: 8px;
+  padding: 0.75rem;
+  min-height: 120px;
+}
+
+.timetable-course-code {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1d4ed8;
+}
+
+.timetable-course-name {
+  font-weight: 700;
+  margin: 0.25rem 0 0.5rem;
+  color: #0f172a;
+}
+
+.timetable-meta {
+  color: #475569;
+  font-size: 0.9rem;
+  margin-top: 0.2rem;
+}
+
+.room-link-button {
+  margin-top: 0.4rem;
+  padding: 0;
+  background: none;
+  border: none;
+  color: #1d4ed8;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.room-link-button:hover {
+  text-decoration: underline;
+}
+
+.timetable-empty {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.room-location-card {
+  margin-top: 1.25rem;
+  background: #f8fafc;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.room-location-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.room-location-header h3 {
+  margin: 0.2rem 0 0;
+}
+
+.room-location-eyebrow {
+  margin: 0;
+  color: #2563eb;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.room-location-close {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid #cbd5e1;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.room-location-content {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 1rem;
+}
+
+.room-location-details p {
+  margin: 0 0 0.75rem;
+}
+
+.room-location-link {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.room-location-map {
+  width: 100%;
+  min-height: 280px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .program-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-item {
+    grid-template-columns: 1fr;
+  }
+
+  .timetable-table {
+    min-width: 720px;
+  }
+
+  .room-location-content {
+    grid-template-columns: 1fr;
+  }
 }

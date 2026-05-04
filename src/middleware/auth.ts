@@ -23,6 +23,8 @@ type AuthenticatedRequest = Request & {
   user: AuthUser;
 };
 
+export type { AuthUser, AuthenticatedRequest };
+
 export function authenticate(req: Request, res: Response, next: NextFunction) {
   const header = req.headers.authorization;
 
