@@ -19,7 +19,7 @@ export default function LoginPage() {
     try {
       const response = await authService.login({ email, password });
       login(response.token, response.user);
-      navigate("/dashboard");
+      navigate("/home");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {

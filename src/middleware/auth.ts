@@ -1,15 +1,6 @@
 import jwt from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
-
-function getRequiredEnv(name: string): string {
-  const value = process.env[name];
-
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
-  }
-
-  return value;
-}
+import { getRequiredEnv } from "../env.ts";
 
 const JWT_SECRET = getRequiredEnv("JWT_SECRET");
 

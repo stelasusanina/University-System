@@ -154,6 +154,18 @@ model Schedule {
   semester  Semester  @relation(fields: [semesterId], references: [id])
 }
 
+model Building {
+  id            Int      @id @default(autoincrement())
+  number        Int      @unique
+  name          String   @db.VarChar(200)
+  address       String   @db.VarChar(300)
+  latitude      Float
+  longitude     Float
+  googleMapsUrl String   @db.VarChar(1000)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 model Channel {
   id          Int      @id @default(autoincrement())
   name        String   @db.VarChar(200)

@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext.tsx";
 import { useNavigate } from "react-router-dom";
-import { api } from "../services/api";
-import RoomLocationCard, { type RoomLocation } from "../components/RoomLocationCard";
+import { api } from "../services/api.ts";
 
 type ProgramResponse = {
   student: {
@@ -41,8 +40,25 @@ type ProgramResponse = {
       endTime: string;
       room: string;
       type: string;
+      building: {
+        number: number;
+        name: string;
+        address: string;
+        latitude: number;
+        longitude: number;
+        googleMapsUrl: string;
+      } | null;
     }>;
   }>;
+};
+
+type BuildingInfo = {
+  number: number;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  googleMapsUrl: string;
 };
 
 type TimetableEntry = {
@@ -55,6 +71,7 @@ type TimetableEntry = {
   courseCode: string;
   courseName: string;
   lecturerName: string;
+  building: BuildingInfo | null;
 };
 
 const dayOrder = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
@@ -67,52 +84,13 @@ const dayLabels: Record<string, string> = {
   FRIDAY: "Friday",
 };
 
-const hardcodedRoomLocations: Record<string, RoomLocation> = {
-  "101": {
-    room: "101",
-    buildingName: "Main Academic Building",
-    address: "1 University Square, Sofia",
-    latitude: 42.6977,
-    longitude: 23.3219,
-    note: "First floor, north corridor.",
-  },
-  "201": {
-    room: "201",
-    buildingName: "Engineering корпус",
-    address: "12 Studentski Blvd, Sofia",
-    latitude: 42.6506,
-    longitude: 23.3792,
-    note: "Second floor, right after the central stairs.",
-  },
-  "A-301": {
-    room: "A-301",
-    buildingName: "Faculty A",
-    address: "8 Akademik Ivan Geshov Blvd, Sofia",
-    latitude: 42.685,
-    longitude: 23.3045,
-    note: "Third floor, west wing.",
-  },
-  TEST: {
-    room: "TEST-101",
-    buildingName: "Test Building",
-    address: "15 Test Campus Blvd, Sofia",
-    latitude: 42.6979,
-    longitude: 23.3222,
-    note: "Temporary hardcoded location for Leaflet integration testing.",
-  },
-};
 
-function normalizeRoomKey(room: string): string {
-  return room.trim().toUpperCase();
-}
-
-export default function DashboardPage() {
+export default function SchedulePage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [program, setProgram] = useState<ProgramResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedRoom, setSelectedRoom] = useState<RoomLocation | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -159,6 +137,7 @@ export default function DashboardPage() {
         courseCode: course.code,
         courseName: course.name,
         lecturerName: `${course.lecturer.title} ${course.lecturer.firstName} ${course.lecturer.lastName}`,
+        building: schedule.building,
       })),
     ) ?? [];
 
@@ -180,16 +159,21 @@ export default function DashboardPage() {
     ]),
   );
 
-  const handleRoomClick = (room: string) => {
-    const normalizedRoom = normalizeRoomKey(room);
-    const location = hardcodedRoomLocations[normalizedRoom] ?? {
-      ...hardcodedRoomLocations.TEST,
-      room,
-      note: `Temporary fallback map because room ${room} is not configured yet.`,
-    };
-
+  const handleRoomClick = (entry: TimetableEntry) => {
+    if (!entry.building) {
+      setError(`No building data available for room ${entry.room}. Check that the room code starts with a valid building number.`);
+      return;
+    }
     setError("");
-    setSelectedRoom(location);
+    const params = new URLSearchParams({
+      lat: String(entry.building.latitude),
+      lng: String(entry.building.longitude),
+      name: entry.building.name,
+      building: String(entry.building.number),
+      room: entry.room,
+      address: entry.building.address,
+    });
+    window.open(`/map?${params.toString()}`, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -208,22 +192,6 @@ export default function DashboardPage() {
 
         {!loading && !error && program && (
           <div className="program-layout">
-            <section className="program-card student-card">
-              <h2>{program.student.firstName} {program.student.lastName}</h2>
-              <p><strong>Faculty number:</strong> {program.student.facultyNumber}</p>
-              <p><strong>Faculty:</strong> {program.student.faculty}</p>
-              <p><strong>Specialty:</strong> {program.student.specialty}</p>
-              <p><strong>Year / Group:</strong> {program.student.year} / {program.student.group}</p>
-              <p><strong>Semester:</strong> {program.semester.name} ({program.semester.period} {program.semester.year})</p>
-              <button
-                type="button"
-                className="test-location-button"
-                onClick={() => setSelectedRoom(hardcodedRoomLocations.TEST)}
-              >
-                Open test room location
-              </button>
-            </section>
-
             <section className="program-card">
               <h2>Weekly Program</h2>
               {timetableEntries.length === 0 && <p>No schedule entries yet.</p>}
@@ -263,7 +231,7 @@ export default function DashboardPage() {
                                         <button
                                           type="button"
                                           className="room-link-button"
-                                          onClick={() => handleRoomClick(entry.room)}
+                                          onClick={() => handleRoomClick(entry)}
                                         >
                                           Room {entry.room}
                                         </button>
@@ -282,12 +250,7 @@ export default function DashboardPage() {
                     </table>
                   </div>
 
-                  {selectedRoom && (
-                    <RoomLocationCard
-                      location={selectedRoom}
-                      onClose={() => setSelectedRoom(null)}
-                    />
-                  )}
+
                 </>
               )}
             </section>

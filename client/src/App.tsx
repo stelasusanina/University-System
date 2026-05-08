@@ -2,7 +2,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import DashboardPage from "./pages/DashboardPage";
+import HomeStudentPage from "./pages/HomeStudentPage";
+import SchedulePage from "./pages/SchedulePage";
+import MapPage from "./pages/MapPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
 
@@ -13,11 +15,20 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/map" element={<MapPage />} />
           <Route
-            path="/dashboard"
+            path="/home"
             element={
               <ProtectedRoute>
-                <DashboardPage />
+                <HomeStudentPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/schedule"
+            element={
+              <ProtectedRoute>
+                <SchedulePage />
               </ProtectedRoute>
             }
           />
