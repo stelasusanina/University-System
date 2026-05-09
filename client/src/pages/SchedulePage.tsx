@@ -3,7 +3,16 @@ import { useAuth } from "../context/AuthContext.tsx";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api.ts";
 
-type ProgramResponse = {
+type BuildingInfo = {
+  number: number;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  googleMapsUrl: string;
+};
+
+type StudentProgramResponse = {
   student: {
     id: number;
     facultyNumber: string;
@@ -40,26 +49,46 @@ type ProgramResponse = {
       endTime: string;
       room: string;
       type: string;
-      building: {
-        number: number;
-        name: string;
-        address: string;
-        latitude: number;
-        longitude: number;
-        googleMapsUrl: string;
-      } | null;
+      building: BuildingInfo | null;
     }>;
   }>;
 };
 
-type BuildingInfo = {
-  number: number;
-  name: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  googleMapsUrl: string;
+type StaffProgramResponse = {
+  staff: {
+    id: number;
+    staffNumber: string;
+    firstName: string;
+    lastName: string;
+    title: string;
+    faculty: string;
+  };
+  semester: {
+    id: number;
+    name: string;
+    year: number;
+    period: string;
+  };
+  courses: Array<{
+    id: number;
+    code: string;
+    name: string;
+    description: string | null;
+    credits: number;
+    type: string;
+    specialty: string;
+    schedules: Array<{
+      id: number;
+      dayOfWeek: string;
+      startTime: string;
+      endTime: string;
+      room: string;
+      type: string;
+    }>;
+  }>;
 };
+
+type ProgramResponse = StudentProgramResponse | StaffProgramResponse;
 
 type TimetableEntry = {
   id: number;
@@ -70,7 +99,7 @@ type TimetableEntry = {
   type: string;
   courseCode: string;
   courseName: string;
-  lecturerName: string;
+  lecturerName: string | null;
   building: BuildingInfo | null;
 };
 
@@ -92,12 +121,15 @@ export default function SchedulePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const isStudent = user?.role === "STUDENT";
+
   useEffect(() => {
     let isMounted = true;
 
     const loadProgram = async () => {
       try {
-        const response = await api.get<ProgramResponse>("/me/program");
+        const endpoint = isStudent ? "/student/program" : "/academic-staff/program";
+        const response = await api.get<ProgramResponse>(endpoint);
 
         if (isMounted) {
           setProgram(response);
@@ -118,7 +150,7 @@ export default function SchedulePage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [isStudent]);
 
   const handleLogout = () => {
     logout();
@@ -136,8 +168,11 @@ export default function SchedulePage() {
         type: schedule.type,
         courseCode: course.code,
         courseName: course.name,
-        lecturerName: `${course.lecturer.title} ${course.lecturer.firstName} ${course.lecturer.lastName}`,
-        building: schedule.building,
+        lecturerName:
+          "lecturer" in course
+            ? `${course.lecturer.title} ${course.lecturer.firstName} ${course.lecturer.lastName}`
+            : null,
+        building: "building" in schedule ? (schedule.building as BuildingInfo | null) : null,
       })),
     ) ?? [];
 
@@ -228,14 +263,20 @@ export default function SchedulePage() {
                                         <div className="timetable-course-code">{entry.courseCode}</div>
                                         <div className="timetable-course-name">{entry.courseName}</div>
                                         <div className="timetable-meta">{entry.type}</div>
-                                        <button
-                                          type="button"
-                                          className="room-link-button"
-                                          onClick={() => handleRoomClick(entry)}
-                                        >
-                                          Room {entry.room}
-                                        </button>
-                                        <div className="timetable-meta">{entry.lecturerName}</div>
+                                        {entry.building ? (
+                                          <button
+                                            type="button"
+                                            className="room-link-button"
+                                            onClick={() => handleRoomClick(entry)}
+                                          >
+                                            Room {entry.room}
+                                          </button>
+                                        ) : (
+                                          <div className="timetable-meta">Room {entry.room}</div>
+                                        )}
+                                        {entry.lecturerName && (
+                                          <div className="timetable-meta">{entry.lecturerName}</div>
+                                        )}
                                       </div>
                                     ) : (
                                       <div className="timetable-empty">-</div>

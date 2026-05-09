@@ -187,6 +187,60 @@ button[type="submit"]:disabled {
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
+.program-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.calendar-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.calendar-card h2 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+.calendar-date-label {
+  margin: 0.5rem 0 0;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.home-calendar-card {
+  margin-top: 1rem;
+  max-width: 360px;
+}
+
+.calendar-events {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.calendar-event-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 0.75rem;
+  background: #f8fafc;
+  border-left: 3px solid #1e3a8a;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.calendar-event-type {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #1e3a8a;
+}
+
 .student-card p {
   margin: 0.5rem 0;
 }

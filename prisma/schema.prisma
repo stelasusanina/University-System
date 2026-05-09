@@ -46,6 +46,7 @@ model Specialty {
   faculty  Faculty   @relation(fields: [facultyId], references: [id])
   students Student[]
   courses  Course[]
+  events   Event[]
 }
 
 model Student {
@@ -81,6 +82,7 @@ model AcademicStaff {
   courses   Course[]
   schedules Schedule[]
   channels  Channel[]
+  events    Event[]
   user      User?
 }
 
@@ -102,6 +104,7 @@ model Course {
   enrollments Enrollment[]
   schedules   Schedule[]
   channels    Channel[]
+  events      Event[]
 }
 
 model Semester {
@@ -117,6 +120,7 @@ model Semester {
 
   enrollments Enrollment[]
   schedules   Schedule[]
+  events      Event[]
 }
 
 model Enrollment {
@@ -192,6 +196,29 @@ model Announcement {
   channel Channel @relation(fields: [channelId], references: [id])
 }
 
+model Event {
+  id              Int       @id @default(autoincrement())
+  title           String    @db.VarChar(300)
+  type            EventType
+  date            DateTime  @db.Date
+  startTime       String?   @db.VarChar(5)
+  endTime         String?   @db.VarChar(5)
+  room            String?   @db.VarChar(50)
+  courseId         Int
+  academicStaffId Int
+  specialtyId     Int
+  year            Int
+  group           Int?
+  semesterId      Int
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  course        Course        @relation(fields: [courseId], references: [id])
+  academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
+  specialty     Specialty     @relation(fields: [specialtyId], references: [id])
+  semester      Semester      @relation(fields: [semesterId], references: [id])
+}
+
 enum AnnouncementType {
   INFO
   CANCELLATION
@@ -257,4 +284,12 @@ enum LessonType {
   LECTURE
   SEMINAR_EXERCISE
   LAB_EXERCISE
+}
+
+enum EventType {
+  TEST
+  EXAM
+  ASSIGNMENT
+  PROJECT_DEFENSE
+  OTHER
 }
