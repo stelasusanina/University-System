@@ -7,22 +7,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { PickerDay, type PickerDayProps } from "@mui/x-date-pickers/PickerDay";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
-
-type EventItem = {
-  id: number;
-  title: string;
-  type: string;
-  date: string;
-  startTime: string | null;
-  endTime: string | null;
-  room: string | null;
-  course: { code: string; name: string };
-};
-
-type EventsResponse = {
-  dates: string[];
-  events: EventItem[];
-};
+import type { EventItem, EventsResponse } from "../types/events";
 
 export default function HomeStudentPage() {
   const { user, logout } = useAuth();
@@ -84,7 +69,15 @@ export default function HomeStudentPage() {
                     backgroundColor: "#1e3a8a",
                   },
                 }
-              : undefined
+              : {
+                  "&.Mui-selected": {
+                    backgroundColor: "transparent",
+                    color: "inherit",
+                  },
+                  "&.Mui-selected:hover": {
+                    backgroundColor: "rgba(0, 0, 0, 0.04)",
+                  },
+                }
         }
       />
     );
@@ -116,12 +109,10 @@ export default function HomeStudentPage() {
               slots={{ day: ScheduleDay }}
             />
           </LocalizationProvider>
-          <p className="calendar-date-label">
-            Selected: {selectedDate ? selectedDate.format("dddd, D MMMM YYYY") : "No date selected"}
-          </p>
-          {selectedEvents.length > 0 && (
-            <div className="calendar-events">
-              {selectedEvents.map((event) => (
+          <div className="calendar-events-box">
+            <h3>{selectedDate?.format("dddd, D MMMM YYYY")}</h3>
+            {selectedEvents.length > 0 ? (
+              selectedEvents.map((event) => (
                 <div key={event.id} className="calendar-event-item">
                   <span className="calendar-event-type">{event.type}</span>
                   <strong>{event.course.name}</strong>
@@ -129,9 +120,11 @@ export default function HomeStudentPage() {
                   {event.startTime && <span>{event.startTime}{event.endTime ? `–${event.endTime}` : ""}</span>}
                   {event.room && <span>Room {event.room}</span>}
                 </div>
-              ))}
-            </div>
-          )}
+              ))
+            ) : (
+              <p className="calendar-no-events">Nothing planned</p>
+            )}
+          </div>
         </section>
       </main>
     </div>

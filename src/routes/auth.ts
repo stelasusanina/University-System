@@ -1,13 +1,7 @@
 import { Router } from "express";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { prisma } from "../prisma.ts";
-import { getRequiredEnv } from "../env.ts";
+import { loginUser, registerUser } from "../services/authService.ts";
 
 export const authRouter = Router();
-
-const JWT_SECRET = getRequiredEnv("JWT_SECRET");
-const JWT_EXPIRES_IN = "2h";
 
 authRouter.post("/login", async (req, res) => {
   const { email, password } = req.body;
@@ -16,25 +10,13 @@ authRouter.post("/login", async (req, res) => {
     return res.status(400).json({ error: "Email and password are required" });
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const result = await loginUser(email, password);
 
-  if (!user) {
-    return res.status(401).json({ error: "Invalid email or password" });
+  if ("error" in result) {
+    return res.status(result.status).json({ error: result.error });
   }
 
-  const valid = await bcrypt.compare(password, user.password);
-
-  if (!valid) {
-    return res.status(401).json({ error: "Invalid email or password" });
-  }
-
-  const token = jwt.sign(
-    { userId: user.id, email: user.email, role: user.role },
-    JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN },
-  );
-
-  return res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
+  return res.json({ token: result.token, user: result.user });
 });
 
 authRouter.post("/register", async (req, res) => {
@@ -44,52 +26,11 @@ authRouter.post("/register", async (req, res) => {
     return res.status(400).json({ error: "Email, identifier number, first name, last name, and password are required" });
   }
 
-  const student = await prisma.student.findUnique({ where: { facultyNumber: identifierNumber } });
-  const academicStaff = await prisma.academicStaff.findUnique({ where: { staffNumber: identifierNumber } });
+  const result = await registerUser(email, identifierNumber, firstName, lastName, password);
 
-  if (!student && !academicStaff) {
-    return res.status(404).json({ error: "No person found with this identifier number" });
+  if ("error" in result) {
+    return res.status(result.status).json({ error: result.error });
   }
 
-  const person = student ?? academicStaff!;
-  if (
-    person.firstName.toLowerCase() !== firstName.toLowerCase() ||
-    person.lastName.toLowerCase() !== lastName.toLowerCase()
-  ) {
-    return res.status(403).json({ error: "Names do not match the records for this identifier" });
-  }
-
-  const role = student ? "STUDENT" : academicStaff!.title;
-
-  const existingByLinkedRecord = await prisma.user.findFirst({
-    where: student ? { studentId: student.id } : { academicStaffId: academicStaff!.id },
-  });
-
-  if (existingByLinkedRecord) {
-    return res.status(409).json({ error: "An account already exists for this person" });
-  }
-
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
-    return res.status(409).json({ error: "An account already exists for this person" });
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  const user = await prisma.user.create({
-    data: {
-      email,
-      password: hashedPassword,
-      role,
-      ...(student ? { studentId: student.id } : { academicStaffId: academicStaff!.id }),
-    },
-  });
-
-  const token = jwt.sign(
-    { userId: user.id, email: user.email, role: user.role },
-    JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN },
-  );
-
-  return res.status(201).json({ token, user: { id: user.id, email: user.email, role: user.role } });
+  return res.status(result.status).json({ token: result.token, user: result.user });
 });

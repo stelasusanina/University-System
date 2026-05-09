@@ -215,11 +215,33 @@ button[type="submit"]:disabled {
   max-width: 360px;
 }
 
+.calendar-events-box {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  min-height: 80px;
+}
+
+.calendar-events-box h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: #1e3a8a;
+}
+
+.calendar-no-events {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
 .calendar-events {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-top: 0.75rem;
+  padding-top: 0.25rem;
 }
 
 .calendar-event-item {
@@ -231,6 +253,27 @@ button[type="submit"]:disabled {
   border-left: 3px solid #1e3a8a;
   border-radius: 6px;
   font-size: 0.9rem;
+}
+
+.calendar-event-close {
+  position: absolute;
+  top: -0.2rem;
+  right: 0;
+  padding: 0;
+  width: 1.4rem;
+  height: 1.4rem;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.calendar-event-close:hover {
+  background: #e2e8f0;
+  color: #334155;
 }
 
 .calendar-event-type {

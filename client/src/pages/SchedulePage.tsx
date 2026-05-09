@@ -2,106 +2,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.tsx";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api.ts";
-
-type BuildingInfo = {
-  number: number;
-  name: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  googleMapsUrl: string;
-};
-
-type StudentProgramResponse = {
-  student: {
-    id: number;
-    facultyNumber: string;
-    firstName: string;
-    lastName: string;
-    year: number;
-    group: number;
-    specialty: string;
-    faculty: string;
-  };
-  semester: {
-    id: number;
-    name: string;
-    year: number;
-    period: string;
-  };
-  courses: Array<{
-    id: number;
-    code: string;
-    name: string;
-    description: string | null;
-    credits: number;
-    type: string;
-    status: string;
-    lecturer: {
-      firstName: string;
-      lastName: string;
-      title: string;
-    };
-    schedules: Array<{
-      id: number;
-      dayOfWeek: string;
-      startTime: string;
-      endTime: string;
-      room: string;
-      type: string;
-      building: BuildingInfo | null;
-    }>;
-  }>;
-};
-
-type StaffProgramResponse = {
-  staff: {
-    id: number;
-    staffNumber: string;
-    firstName: string;
-    lastName: string;
-    title: string;
-    faculty: string;
-  };
-  semester: {
-    id: number;
-    name: string;
-    year: number;
-    period: string;
-  };
-  courses: Array<{
-    id: number;
-    code: string;
-    name: string;
-    description: string | null;
-    credits: number;
-    type: string;
-    specialty: string;
-    schedules: Array<{
-      id: number;
-      dayOfWeek: string;
-      startTime: string;
-      endTime: string;
-      room: string;
-      type: string;
-    }>;
-  }>;
-};
-
-type ProgramResponse = StudentProgramResponse | StaffProgramResponse;
-
-type TimetableEntry = {
-  id: number;
-  dayOfWeek: string;
-  startTime: string;
-  endTime: string;
-  room: string;
-  type: string;
-  courseCode: string;
-  courseName: string;
-  lecturerName: string | null;
-  building: BuildingInfo | null;
-};
+import type { BuildingInfo } from "../types/building";
+import type { ProgramResponse, TimetableEntry } from "../types/schedule";
 
 const dayOrder = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 
@@ -290,8 +192,6 @@ export default function SchedulePage() {
                       </tbody>
                     </table>
                   </div>
-
-
                 </>
               )}
             </section>
