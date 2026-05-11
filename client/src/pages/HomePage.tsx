@@ -9,18 +9,31 @@ import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
 import type { EventItem, EventsResponse } from "../types/events";
 
-export default function HomeStudentPage() {
+interface Announcement {
+  id: number;
+  message: string;
+  type: string;
+  validTo: string;
+  createdAt: string;
+  course?: { code: string; name: string } | null;
+  academicStaff?: { firstName: string; lastName: string; title: string };
+  specialty?: { name: string };
+}
+
+export default function HomePage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
   const [highlightedDates, setHighlightedDates] = useState<Set<string>>(new Set());
   const [events, setEvents] = useState<EventItem[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
   useEffect(() => {
     api.get<EventsResponse>("/events/dates").then((res) => {
       setHighlightedDates(new Set(res.dates));
       setEvents(res.events);
     }).catch(() => {});
+    api.get<Announcement[]>("/announcements").then(setAnnouncements).catch(() => {});
   }, []);
 
   const handleLogout = () => {
@@ -90,6 +103,7 @@ export default function HomeStudentPage() {
         <div className="top-nav-links">
           <Link to="/home" className="nav-link">Home</Link>
           <Link to="/schedule" className="nav-link">Schedule</Link>
+          {user?.role !== "STUDENT" && <Link to="/announcements" className="nav-link">Announcements</Link>}
         </div>
         <div className="top-nav-user">
           <span>{user?.email}</span>
@@ -101,31 +115,56 @@ export default function HomeStudentPage() {
 
       <main className="home-main">
         <h1>Welcome, {user?.email}</h1>
-        <section className="calendar-card home-calendar-card">
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DateCalendar
-              value={selectedDate}
-              onChange={(nextDate) => setSelectedDate(nextDate)}
-              slots={{ day: ScheduleDay }}
-            />
-          </LocalizationProvider>
-          <div className="calendar-events-box">
-            <h3>{selectedDate?.format("dddd, D MMMM YYYY")}</h3>
-            {selectedEvents.length > 0 ? (
-              selectedEvents.map((event) => (
-                <div key={event.id} className="calendar-event-item">
-                  <span className="calendar-event-type">{event.type}</span>
-                  <strong>{event.course.name}</strong>
-                  <span>{event.title}</span>
-                  {event.startTime && <span>{event.startTime}{event.endTime ? `–${event.endTime}` : ""}</span>}
-                  {event.room && <span>Room {event.room}</span>}
+        <div className="home-grid">
+          <section className="calendar-card home-calendar-card">
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DateCalendar
+                value={selectedDate}
+                onChange={(nextDate) => setSelectedDate(nextDate)}
+                slots={{ day: ScheduleDay }}
+              />
+            </LocalizationProvider>
+            <div className="calendar-events-box">
+              <h3>{selectedDate?.format("dddd, D MMMM YYYY")}</h3>
+              {selectedEvents.length > 0 ? (
+                selectedEvents.map((event) => (
+                  <div key={event.id} className="calendar-event-item">
+                    <span className="calendar-event-type">{event.type}</span>
+                    <strong>{event.course.name}</strong>
+                    <span>{event.title}</span>
+                    {event.startTime && <span>{event.startTime}{event.endTime ? `–${event.endTime}` : ""}</span>}
+                    {event.room && <span>Room {event.room}</span>}
+                  </div>
+                ))
+              ) : (
+                <p className="calendar-no-events">Nothing planned</p>
+              )}
+            </div>
+          </section>
+
+          <section className="announcements-card">
+            <h2>{user?.role === "STUDENT" ? "Announcements" : "Announcements by me"}</h2>
+            {announcements.length > 0 ? (
+              announcements.map((a) => (
+                <div key={a.id} className={`announcement-item announcement-${a.type.toLowerCase()}`}>
+                  <div className="announcement-header">
+                    <span className={`announcement-badge announcement-badge-${a.type.toLowerCase()}`}>{a.type.replace("_", " ")}</span>
+                    <span className="announcement-time">{dayjs(a.createdAt).format("D MMM, HH:mm")}</span>
+                  </div>
+                  <p className="announcement-message">{a.message}</p>
+                  {a.academicStaff && (
+                    <span className="announcement-author">
+                      — {a.academicStaff.title} {a.academicStaff.firstName} {a.academicStaff.lastName}
+                    </span>
+                  )}
+                  {a.course && <span className="announcement-course">{a.course.name}</span>}
                 </div>
               ))
             ) : (
-              <p className="calendar-no-events">Nothing planned</p>
+              <p className="calendar-no-events">No announcements</p>
             )}
-          </div>
-        </section>
+          </section>
+        </div>
       </main>
     </div>
   );

@@ -47,6 +47,7 @@ model Specialty {
   students Student[]
   courses  Course[]
   events   Event[]
+  announcements Announcement[]
 }
 
 model Student {
@@ -83,6 +84,8 @@ model AcademicStaff {
   schedules Schedule[]
   channels  Channel[]
   events    Event[]
+  announcements Announcement[]
+  materials     Material[]
   user      User?
 }
 
@@ -105,6 +108,8 @@ model Course {
   schedules   Schedule[]
   channels    Channel[]
   events      Event[]
+  announcements Announcement[]
+  materials     Material[]
 }
 
 model Semester {
@@ -121,6 +126,7 @@ model Semester {
   enrollments Enrollment[]
   schedules   Schedule[]
   events      Event[]
+  announcements Announcement[]
 }
 
 model Enrollment {
@@ -181,19 +187,40 @@ model Channel {
 
   course        Course?        @relation(fields: [courseId], references: [id])
   academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
-  announcements Announcement[]
 }
 
 model Announcement {
-  id        Int              @id @default(autoincrement())
-  title     String           @db.VarChar(300)
-  content   String           @db.Text
-  type      AnnouncementType @default(INFO)
-  channelId Int
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id              Int              @id @default(autoincrement())
+  message         String           @db.Text
+  type            AnnouncementType @default(INFO)
+  validTo         DateTime
+  academicStaffId Int
+  courseId         Int?
+  specialtyId     Int
+  year            Int
+  group           Int?
+  semesterId      Int
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
-  channel Channel @relation(fields: [channelId], references: [id])
+  academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
+  course        Course?       @relation(fields: [courseId], references: [id])
+  specialty     Specialty     @relation(fields: [specialtyId], references: [id])
+  semester      Semester      @relation(fields: [semesterId], references: [id])
+}
+
+model Material {
+  id              Int      @id @default(autoincrement())
+  title           String   @db.VarChar(300)
+  description     String?  @db.Text
+  fileUrl         String   @db.VarChar(1000)
+  fileType        String   @db.VarChar(10)
+  courseId        Int
+  academicStaffId Int
+  uploadedAt      DateTime @default(now())
+
+  course        Course        @relation(fields: [courseId], references: [id])
+  academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
 }
 
 model Event {

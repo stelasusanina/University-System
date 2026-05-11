@@ -2,8 +2,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import HomeStudentPage from "./pages/HomeStudentPage";
+import HomePage from "./pages/HomePage";
 import SchedulePage from "./pages/SchedulePage";
+import ManageAnnouncementsPage from "./pages/ManageAnnouncementsPage";
 import MapPage from "./pages/MapPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
@@ -20,7 +21,7 @@ function App() {
             path="/home"
             element={
               <ProtectedRoute>
-                <HomeStudentPage />
+                <HomePage />
               </ProtectedRoute>
             }
           />
@@ -29,6 +30,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <SchedulePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/announcements"
+            element={
+              <ProtectedRoute>
+                <ManageAnnouncementsPage />
               </ProtectedRoute>
             }
           />
