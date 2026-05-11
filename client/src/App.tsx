@@ -5,6 +5,7 @@ import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
 import SchedulePage from "./pages/SchedulePage";
 import ManageAnnouncementsPage from "./pages/ManageAnnouncementsPage";
+import MaterialsPage from "./pages/MaterialsPage";
 import MapPage from "./pages/MapPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
@@ -38,6 +39,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ManageAnnouncementsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/materials"
+            element={
+              <ProtectedRoute>
+                <MaterialsPage />
               </ProtectedRoute>
             }
           />

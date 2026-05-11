@@ -27,4 +27,18 @@ export const api = {
     request<T>(endpoint, { method: "PUT", body: JSON.stringify(data) }),
   delete: <T>(endpoint: string) =>
     request<T>(endpoint, { method: "DELETE" }),
+  postForm: <T>(endpoint: string, form: FormData) => {
+    const token = localStorage.getItem("token");
+    return fetch(`${API_URL}${endpoint}`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    }).then(async (res) => {
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ error: "Request failed" }));
+        throw new Error(error.error || `HTTP ${res.status}`);
+      }
+      return res.json() as Promise<T>;
+    });
+  },
 };

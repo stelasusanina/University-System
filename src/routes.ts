@@ -6,7 +6,7 @@ import { getStudentProgram } from "./services/studentService.ts";
 import { getAcademicStaffProgram } from "./services/academicStaffService.ts";
 import { getEventsForUser } from "./services/eventService.ts";
 import { createAnnouncement, getAnnouncementsForUser, updateAnnouncement, deleteAnnouncement, getStaffFormOptions } from "./services/announcementService.ts";
-import { uploadMaterial, getMaterialsForCourse } from "./services/materialService.ts";
+import { uploadMaterial, getMaterialsForCourse, getMaterialsByStaff, deleteMaterial, getCoursesWithMaterialsForStudent, getCoursesForStaff } from "./services/materialService.ts";
 import { upload } from "./utils/upload.ts";
 import { prisma } from "./prisma.ts";
 import type { Request } from "express";
@@ -189,7 +189,14 @@ router.delete("/announcements/:id", authenticate, async (req, res) => {
 router.post(
   "/materials",
   authenticate,
-  upload.single("file"),
+  (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+      if (err) {
+        return res.status(400).json({ error: err instanceof Error ? err.message : "File upload failed" });
+      }
+      next();
+    });
+  },
   async (req, res) => {
     const { userId, role } = (req as AuthenticatedRequest).user;
 
@@ -254,4 +261,106 @@ router.get("/materials/course/:courseId", authenticate, async (req, res) => {
 
   const materials = await getMaterialsForCourse(courseId);
   return res.json(materials);
+});
+
+// Staff: list all courses they can upload materials to
+router.get("/materials/staff-courses", authenticate, async (req, res) => {
+  const { userId, role } = (req as AuthenticatedRequest).user;
+
+  const allowedRoles = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
+  if (!allowedRoles.includes(role)) {
+    return res.status(403).json({ error: "Only academic staff can access this endpoint" });
+  }
+
+  const userRecord = await prisma.user.findUnique({
+    where: { id: userId! },
+    select: { academicStaffId: true },
+  });
+
+  if (!userRecord?.academicStaffId) {
+    return res.status(403).json({ error: "Academic staff record not found" });
+  }
+
+  const courses = await getCoursesForStaff(userRecord.academicStaffId);
+  return res.json(courses);
+});
+
+// Staff: list all materials they have uploaded
+router.get("/materials/my", authenticate, async (req, res) => {
+  const { userId, role } = (req as AuthenticatedRequest).user;
+
+  const allowedRoles = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
+  if (!allowedRoles.includes(role)) {
+    return res.status(403).json({ error: "Only academic staff can access this endpoint" });
+  }
+
+  const userRecord = await prisma.user.findUnique({
+    where: { id: userId! },
+    select: { academicStaffId: true },
+  });
+
+  if (!userRecord?.academicStaffId) {
+    return res.status(403).json({ error: "Academic staff record not found" });
+  }
+
+  const materials = await getMaterialsByStaff(userRecord.academicStaffId);
+  return res.json(materials);
+});
+
+// Staff: delete own material
+router.delete("/materials/:id", authenticate, async (req, res) => {
+  const { userId, role } = (req as AuthenticatedRequest).user;
+
+  const allowedRoles = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
+  if (!allowedRoles.includes(role)) {
+    return res.status(403).json({ error: "Only academic staff can delete materials" });
+  }
+
+  const materialId = parseInt(req.params.id as string);
+  if (isNaN(materialId)) {
+    return res.status(400).json({ error: "id must be a number" });
+  }
+
+  const userRecord = await prisma.user.findUnique({
+    where: { id: userId! },
+    select: { academicStaffId: true },
+  });
+
+  if (!userRecord?.academicStaffId) {
+    return res.status(403).json({ error: "Academic staff record not found" });
+  }
+
+  const result = await deleteMaterial(materialId, userRecord.academicStaffId);
+
+  if ("error" in result) {
+    return res.status(result.status).json({ error: result.error });
+  }
+
+  return res.json({ success: true });
+});
+
+// Student: list enrolled courses with their materials for current semester
+router.get("/materials/courses", authenticate, async (req, res) => {
+  const { userId, role } = (req as AuthenticatedRequest).user;
+
+  if (role !== "STUDENT") {
+    return res.status(403).json({ error: "Only students can access this endpoint" });
+  }
+
+  const userRecord = await prisma.user.findUnique({
+    where: { id: userId! },
+    select: { studentId: true },
+  });
+
+  if (!userRecord?.studentId) {
+    return res.status(403).json({ error: "Student record not found" });
+  }
+
+  const result = await getCoursesWithMaterialsForStudent(userRecord.studentId);
+
+  if (!result) {
+    return res.status(404).json({ error: "No active semester found" });
+  }
+
+  return res.json(result);
 });

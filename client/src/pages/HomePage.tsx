@@ -104,6 +104,7 @@ export default function HomePage() {
           <Link to="/home" className="nav-link">Home</Link>
           <Link to="/schedule" className="nav-link">Schedule</Link>
           {user?.role !== "STUDENT" && <Link to="/announcements" className="nav-link">Announcements</Link>}
+          <Link to="/materials" className="nav-link">Materials</Link>
         </div>
         <div className="top-nav-user">
           <span>{user?.email}</span>

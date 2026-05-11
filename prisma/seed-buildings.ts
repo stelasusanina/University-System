@@ -96,7 +96,7 @@ const buildings = [
   },
 ];
 
-async function main() {
+try {
   for (const building of buildings) {
     await prisma.building.upsert({
       where: { number: building.number },
@@ -105,8 +105,9 @@ async function main() {
     });
     console.log(`Upserted building ${building.number}: ${building.name}`);
   }
+} catch (err) {
+  console.error(err);
+  process.exit(1);
+} finally {
+  await prisma.$disconnect();
 }
-
-main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());

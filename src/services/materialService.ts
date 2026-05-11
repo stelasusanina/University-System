@@ -15,6 +15,14 @@ function extractFileType(originalName: string): string {
 }
 
 export async function uploadMaterial(input: UploadMaterialInput) {
+  // Ownership guard: staff can only upload to courses they teach
+  const course = await prisma.course.findFirst({
+    where: { id: input.courseId, academicStaffId: input.academicStaffId },
+  });
+  if (!course) {
+    throw new Error("Course not found or you are not the assigned lecturer for this course");
+  }
+
   const fileType = extractFileType(input.originalName);
 
   return prisma.material.create({
@@ -29,6 +37,47 @@ export async function uploadMaterial(input: UploadMaterialInput) {
   });
 }
 
+// Staff: list all courses they are assigned to (all semesters) for the upload dropdown
+export async function getCoursesForStaff(academicStaffId: number) {
+  return prisma.course.findMany({
+    where: { academicStaffId },
+    orderBy: [{ year: "asc" }, { semester: "asc" }, { name: "asc" }],
+    select: { id: true, code: true, name: true, year: true, semester: true },
+  });
+}
+
+// Staff: list all materials they have uploaded across all courses
+export async function getMaterialsByStaff(academicStaffId: number) {
+  return prisma.material.findMany({
+    where: { academicStaffId },
+    orderBy: { uploadedAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      fileUrl: true,
+      fileType: true,
+      uploadedAt: true,
+      course: { select: { id: true, code: true, name: true } },
+    },
+  });
+}
+
+// Staff: delete own material (ownership enforced)
+export async function deleteMaterial(
+  materialId: number,
+  academicStaffId: number,
+): Promise<{ error: string; status: number } | { success: true }> {
+  const material = await prisma.material.findUnique({ where: { id: materialId } });
+  if (!material) return { error: "Material not found", status: 404 };
+  if (material.academicStaffId !== academicStaffId)
+    return { error: "You can only delete your own materials", status: 403 };
+
+  await prisma.material.delete({ where: { id: materialId } });
+  return { success: true };
+}
+
+// Shared: list materials for a single course
 export async function getMaterialsForCourse(courseId: number) {
   return prisma.material.findMany({
     where: { courseId },
@@ -45,4 +94,49 @@ export async function getMaterialsForCourse(courseId: number) {
       },
     },
   });
+}
+
+// Student: list their enrolled courses (current semester) with materials for each
+export async function getCoursesWithMaterialsForStudent(studentId: number) {
+  const currentSemester = await prisma.semester.findFirst({
+    where: { isCurrent: true },
+    orderBy: [{ year: "desc" }, { startDate: "desc" }],
+    select: { id: true, name: true, year: true, period: true },
+  });
+
+  if (!currentSemester) return null;
+
+  const enrollments = await prisma.enrollment.findMany({
+    where: { studentId, semesterId: currentSemester.id },
+    select: {
+      course: {
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          year: true,
+          semester: true,
+          type: true,
+          academicStaff: { select: { firstName: true, lastName: true, title: true } },
+          materials: {
+            orderBy: { uploadedAt: "desc" },
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              fileUrl: true,
+              fileType: true,
+              uploadedAt: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: [{ courseId: "asc" }],
+  });
+
+  return {
+    semester: currentSemester,
+    courses: enrollments.map(({ course }) => course),
+  };
 }

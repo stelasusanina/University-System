@@ -95,6 +95,7 @@ model Course {
   code        String     @unique @db.VarChar(20)
   description String?    @db.Text
   credits     Int
+  year        Int
   semester    Int
   type        CourseType @default(MANDATORY)
   specialtyId Int
