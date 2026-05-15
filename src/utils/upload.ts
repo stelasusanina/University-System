@@ -27,5 +27,5 @@ export const upload = multer({
       cb(new Error("Only PDF, DOCX and PPTX files are allowed"));
     }
   },
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB
+  limits: { fileSize: 50 * 1024 * 1024 },
 });

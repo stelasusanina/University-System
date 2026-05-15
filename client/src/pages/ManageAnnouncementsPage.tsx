@@ -257,9 +257,9 @@ export default function ManageAnnouncementsPage() {
 
         {loading ? (
           <p>Loading...</p>
-        ) : announcements.length === 0 ? (
+        ) : !showForm && announcements.length === 0 ? (
           <p className="calendar-no-events" style={{ marginTop: "1.5rem" }}>No active announcements</p>
-        ) : (
+        ) : !showForm && (
           <div className="announcements-list">
             {announcements.map((a) => (
               <div key={a.id} className={`announcement-item announcement-${a.type.toLowerCase()}`}>
