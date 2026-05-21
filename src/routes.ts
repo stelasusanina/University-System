@@ -4,7 +4,7 @@ import type { AuthenticatedRequest } from "./middleware/auth.ts";
 import { loginUser, registerUser } from "./services/authService.ts";
 import { getStudentProgram } from "./services/studentService.ts";
 import { getAcademicStaffProgram } from "./services/academicStaffService.ts";
-import { getEventsForUser } from "./services/eventService.ts";
+import { getEventsForUser, createEvent, deleteEvent } from "./services/eventService.ts";
 import { createAnnouncement, getAnnouncementsForUser, updateAnnouncement, deleteAnnouncement, getStaffFormOptions } from "./services/announcementService.ts";
 import { uploadMaterial, getMaterialsForCourse, getMaterialsByStaff, deleteMaterial, getCoursesWithMaterialsForStudent, getCoursesForStaff } from "./services/materialService.ts";
 import { getEnrollmentsForCourse, getCoursesWithEnrollments, setGrade, getMyGrades } from "./services/gradeService.ts";
@@ -94,7 +94,60 @@ router.get("/events/dates", authenticate, async (req, res) => {
   return res.json(result.data);
 });
 
-// ── Announcements ────────────────────────────────────
+router.get("/events/form-options", authenticate, async (req, res) => {
+  const { userId } = (req as AuthenticatedRequest).user;
+
+  if (!userId) {
+    return res.status(401).json({ error: "Invalid token payload" });
+  }
+
+  const result = await getStaffFormOptions(userId);
+
+  if ("error" in result) {
+    return res.status(result.status).json({ error: result.error });
+  }
+
+  return res.json(result.data);
+});
+
+router.post("/events", authenticate, async (req, res) => {
+  const { userId } = (req as AuthenticatedRequest).user;
+
+  if (!userId) {
+    return res.status(401).json({ error: "Invalid token payload" });
+  }
+
+  const { title, type, date, startTime, endTime, room, courseId, specialtyId, year, group } = req.body;
+
+  if (!title || !type || !date || !courseId || !specialtyId || !year) {
+    return res.status(400).json({ error: "title, type, date, courseId, specialtyId, and year are required" });
+  }
+
+  const result = await createEvent(userId, { title, type, date, startTime, endTime, room, courseId, specialtyId, year, group });
+
+  if ("error" in result) {
+    return res.status(result.status).json({ error: result.error });
+  }
+
+  return res.status(result.status).json(result.data);
+});
+
+router.delete("/events/:id", authenticate, async (req, res) => {
+  const { userId } = (req as AuthenticatedRequest).user;
+
+  if (!userId) {
+    return res.status(401).json({ error: "Invalid token payload" });
+  }
+
+  const eventId = parseInt(req.params.id as string);
+  const result = await deleteEvent(userId, eventId);
+
+  if ("error" in result) {
+    return res.status(result.status).json({ error: result.error });
+  }
+
+  return res.json({ success: true });
+});
 
 router.post("/announcements", authenticate, async (req, res) => {
   const { userId } = (req as AuthenticatedRequest).user;
