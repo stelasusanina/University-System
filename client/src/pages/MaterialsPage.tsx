@@ -430,6 +430,7 @@ export default function MaterialsPage() {
             <Link to="/announcements" className="nav-link">Announcements</Link>
           )}
           <Link to="/materials" className="nav-link nav-link-active">Materials</Link>
+          <Link to="/grades" className="nav-link">Grades</Link>
         </div>
         <div className="top-nav-user">
           <span>{user?.email}</span>

@@ -165,8 +165,9 @@ export default function ManageAnnouncementsPage() {
         <div className="top-nav-links">
           <Link to="/home" className="nav-link">Home</Link>
           <Link to="/schedule" className="nav-link">Schedule</Link>
-          <Link to="/announcements" className="nav-link active">Announcements</Link>
+          <Link to="/announcements" className="nav-link nav-link-active">Announcements</Link>
           <Link to="/materials" className="nav-link">Materials</Link>
+          <Link to="/grades" className="nav-link">Grades</Link>
         </div>
         <div className="top-nav-user">
           <span>{user?.email}</span>

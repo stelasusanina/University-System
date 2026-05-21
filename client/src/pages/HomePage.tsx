@@ -101,10 +101,11 @@ export default function HomePage() {
       <nav className="top-nav">
         <div className="top-nav-brand">University System</div>
         <div className="top-nav-links">
-          <Link to="/home" className="nav-link">Home</Link>
+          <Link to="/home" className="nav-link nav-link-active">Home</Link>
           <Link to="/schedule" className="nav-link">Schedule</Link>
           {user?.role !== "STUDENT" && <Link to="/announcements" className="nav-link">Announcements</Link>}
           <Link to="/materials" className="nav-link">Materials</Link>
+          <Link to="/grades" className="nav-link">Grades</Link>
         </div>
         <div className="top-nav-user">
           <span>{user?.email}</span>

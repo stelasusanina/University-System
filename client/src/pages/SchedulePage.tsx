@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.tsx";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { api } from "../services/api.ts";
 import type { BuildingInfo } from "../types/building";
 import type { ProgramResponse, TimetableEntry } from "../types/schedule";
@@ -113,16 +113,26 @@ export default function SchedulePage() {
     window.open(`/map?${params.toString()}`, "_blank", "noopener,noreferrer");
   };
 
+  const isStaff = user?.role !== "STUDENT";
+
   return (
-    <div className="dashboard-container">
-      <header className="dashboard-header">
-        <h1>Dashboard</h1>
-        <div className="user-info">
-          <span>{user?.email} ({user?.role})</span>
-          <button onClick={handleLogout}>Logout</button>
+    <div className="app-layout">
+      <nav className="top-nav">
+        <div className="top-nav-brand">University System</div>
+        <div className="top-nav-links">
+          <Link to="/home" className="nav-link">Home</Link>
+          <Link to="/schedule" className="nav-link nav-link-active">Schedule</Link>
+          {isStaff && <Link to="/announcements" className="nav-link">Announcements</Link>}
+          <Link to="/materials" className="nav-link">Materials</Link>
+          <Link to="/grades" className="nav-link">Grades</Link>
         </div>
-      </header>
-      <main>
+        <div className="top-nav-user">
+          <span>{user?.email}</span>
+          <button type="button" onClick={handleLogout} className="nav-logout-button">Logout</button>
+        </div>
+      </nav>
+
+      <main className="home-main">
         {loading && <p>Loading program...</p>}
 
         {!loading && error && <div className="error-message">{error}</div>}

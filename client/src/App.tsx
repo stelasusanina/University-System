@@ -6,6 +6,7 @@ import HomePage from "./pages/HomePage";
 import SchedulePage from "./pages/SchedulePage";
 import ManageAnnouncementsPage from "./pages/ManageAnnouncementsPage";
 import MaterialsPage from "./pages/MaterialsPage";
+import GradesPage from "./pages/GradesPage";
 import MapPage from "./pages/MapPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
@@ -47,6 +48,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <MaterialsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/grades"
+            element={
+              <ProtectedRoute>
+                <GradesPage />
               </ProtectedRoute>
             }
           />

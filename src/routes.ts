@@ -7,6 +7,7 @@ import { getAcademicStaffProgram } from "./services/academicStaffService.ts";
 import { getEventsForUser } from "./services/eventService.ts";
 import { createAnnouncement, getAnnouncementsForUser, updateAnnouncement, deleteAnnouncement, getStaffFormOptions } from "./services/announcementService.ts";
 import { uploadMaterial, getMaterialsForCourse, getMaterialsByStaff, deleteMaterial, getCoursesWithMaterialsForStudent, getCoursesForStaff } from "./services/materialService.ts";
+import { getEnrollmentsForCourse, getCoursesWithEnrollments, setGrade, getMyGrades } from "./services/gradeService.ts";
 import { upload } from "./utils/upload.ts";
 import { prisma } from "./prisma.ts";
 import type { Request } from "express";
@@ -363,4 +364,71 @@ router.get("/materials/courses", authenticate, async (req, res) => {
   }
 
   return res.json(result);
+});
+
+// ── Grades ────────────────────────────────────────────────────────────────────
+
+const STAFF_ROLES_GRADES = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
+
+// Staff: list their courses (current semester) for the grades overview
+router.get("/grades/courses", authenticate, async (req, res) => {
+  const { userId, role } = (req as AuthenticatedRequest).user;
+  if (!STAFF_ROLES_GRADES.includes(role)) {
+    return res.status(403).json({ error: "Only academic staff can access grades" });
+  }
+  const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { academicStaffId: true } });
+  if (!userRecord?.academicStaffId) return res.status(403).json({ error: "Academic staff record not found" });
+
+  const result = await getCoursesWithEnrollments(userRecord.academicStaffId);
+  if ("error" in result) return res.status(result.status).json({ error: result.error });
+  return res.json(result.data);
+});
+
+// Staff: get all enrollments for one of their courses
+router.get("/grades/course/:courseId", authenticate, async (req, res) => {
+  const { userId, role } = (req as AuthenticatedRequest).user;
+  if (!STAFF_ROLES_GRADES.includes(role)) {
+    return res.status(403).json({ error: "Only academic staff can access grades" });
+  }
+  const courseId = parseInt(req.params.courseId as string);
+  if (isNaN(courseId)) return res.status(400).json({ error: "Invalid courseId" });
+
+  const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { academicStaffId: true } });
+  if (!userRecord?.academicStaffId) return res.status(403).json({ error: "Academic staff record not found" });
+
+  const result = await getEnrollmentsForCourse(courseId, userRecord.academicStaffId);
+  if ("error" in result) return res.status(result.status).json({ error: result.error });
+  return res.json(result.data);
+});
+
+// Staff: set or update a grade
+router.put("/grades/enrollment/:id", authenticate, async (req, res) => {
+  const { userId, role } = (req as AuthenticatedRequest).user;
+  if (!STAFF_ROLES_GRADES.includes(role)) {
+    return res.status(403).json({ error: "Only academic staff can set grades" });
+  }
+  const enrollmentId = parseInt(req.params.id as string);
+  if (isNaN(enrollmentId)) return res.status(400).json({ error: "Invalid enrollment id" });
+
+  const { grade, status } = req.body as { grade?: number | null; status?: string };
+
+  const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { academicStaffId: true } });
+  if (!userRecord?.academicStaffId) return res.status(403).json({ error: "Academic staff record not found" });
+
+  const result = await setGrade(enrollmentId, userRecord.academicStaffId, grade ?? null, status);
+  if ("error" in result) return res.status(result.status).json({ error: result.error });
+  return res.json(result.data);
+});
+
+// Student: get own grades across all semesters
+router.get("/grades/my", authenticate, async (req, res) => {
+  const { userId, role } = (req as AuthenticatedRequest).user;
+  if (role !== "STUDENT") return res.status(403).json({ error: "Only students can access this endpoint" });
+
+  const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { studentId: true } });
+  if (!userRecord?.studentId) return res.status(403).json({ error: "Student record not found" });
+
+  const result = await getMyGrades(userRecord.studentId);
+  if ("error" in result) return res.status(result.status).json({ error: result.error });
+  return res.json(result.data);
 });
