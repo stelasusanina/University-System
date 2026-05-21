@@ -1,0 +1,137 @@
+.grades-section {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.grades-section h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 0.25rem;
+}
+
+.grades-semester-block {
+  margin-bottom: 2rem;
+}
+
+.grades-semester-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.grades-semester-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.grades-avg {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.grades-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.grades-table th {
+  background: #f0f4ff;
+  color: #1a1a2e;
+  font-weight: 600;
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+  border-bottom: 2px solid #dde4f7;
+}
+
+.grades-table td {
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+  vertical-align: middle;
+}
+
+.grades-table tr:last-child td {
+  border-bottom: none;
+}
+
+.grades-table tr:hover td {
+  background: #f8f9ff;
+}
+
+.grades-group-header-row td {
+  background: #e8edff;
+  color: #3b4a8a;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.8rem;
+  border-top: 2px solid #c7d2f5;
+}
+
+.grade-faculty-num {
+  font-family: monospace;
+  color: #555;
+  font-size: 0.85rem;
+}
+
+.grade-input {
+  width: 70px;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid #cdd5f7;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.grade-input:focus {
+  outline: none;
+  border-color: #4a6cf7;
+  box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.15);
+}
+
+.grade-status-select {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #cdd5f7;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  background: #fff;
+}
+
+.grade-save-btn {
+  padding: 0.3rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.grade-value {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.grade-excellent { color: #1a7f37; }
+.grade-good      { color: #3b6bc9; }
+.grade-average   { color: #d97706; }
+.grade-fail      { color: #cc1515; }
+
+.enrollment-status-badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.status-enrolled  { background: #dbeafe; color: #1e40af; }
+.status-passed    { background: #dcfce7; color: #166534; }
+.status-failed    { background: #fee2e2; color: #991b1b; }
+.status-withdrawn { background: #f3f4f6; color: #6b7280; }
