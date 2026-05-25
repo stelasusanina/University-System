@@ -89,7 +89,7 @@ function StaffMaterialsView() {
       const coursesData = await api.get<StaffCourse[]>("/materials/staff-courses");
       setCourses(coursesData);
     } catch {
-      setError("Failed to load courses");
+      setError("Неуспешно зареждане на дисциплини");
     }
     try {
       const materialsData = await api.get<MaterialItem[]>("/materials/my");
@@ -103,7 +103,7 @@ function StaffMaterialsView() {
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
     if (!title || !courseId || !file) {
-      setFormError("Title, course and file are required.");
+      setFormError("Заглавие, дисциплина и файл са задължителни.");
       return;
     }
     setFormError("");
@@ -126,21 +126,21 @@ function StaffMaterialsView() {
       await loadData();
     } catch (err) {
       console.error("Upload error:", err);
-      setFormError(err instanceof Error ? err.message : "Upload failed");
+      setFormError(err instanceof Error ? err.message : "Неуспешно качване");
     } finally {
       setUploading(false);
     }
   }
 
   async function handleDelete(id: number, cId: number) {
-    if (!confirm("Delete this material? This cannot be undone.")) return;
+    if (!confirm("Изтриване на материала? Това действие е необратимо.")) return;
     try {
       await api.delete(`/materials/${id}`);
       setMaterials((prev) => prev.filter((m) => m.id !== id));
       // Keep accordion open on the same course
       setOpenCourse(cId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Delete failed");
+      setError(err instanceof Error ? err.message : "Неуспешно изтриване");
     }
   }
 
@@ -155,13 +155,13 @@ function StaffMaterialsView() {
   return (
     <div className="materials-section">
       <div className="materials-header">
-        <h2>My Materials</h2>
+        <h2>Мои материали</h2>
         <button
           type="button"
           className="btn-primary"
           onClick={() => setShowForm((v) => !v)}
         >
-          {showForm ? "Cancel" : "+ Upload File"}
+          {showForm ? "Отказ" : "+ Качи файл"}
         </button>
       </div>
 
@@ -169,46 +169,46 @@ function StaffMaterialsView() {
 
       {showForm && (
         <form className="material-form" onSubmit={handleUpload}>
-          <h3>Upload new material</h3>
+          <h3>Качване на нов материал</h3>
 
           {formError && <div className="error-message">{formError}</div>}
 
           <label>
-            Title *
+            Заглавие *
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Lecture 1 – Intro to C++"
+              placeholder="напр. Лекция 1 – Въведение в C++"
             />
           </label>
 
           <label>
-            Course *
+            Дисциплина *
             <select
               value={courseId}
               onChange={(e) => setCourseId(Number(e.target.value))}
             >
-              <option value="">Select course…</option>
+              <option value="">Изберете дисциплина…</option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.code} – {c.name} (Year {c.year}, Sem {c.semester})
+                  {c.code} – {c.name} (Курс {c.year}, Сем {c.semester})
                 </option>
               ))}
             </select>
           </label>
 
           <label>
-            Description
+            Описание
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Optional short description"
+              placeholder="Кратко описание (по избор)"
               rows={2}
             />
           </label>
 
           <label>
-            File * <span className="hint">(PDF, DOCX, PPTX)</span>
+            Файл * <span className="hint">(PDF, DOCX, PPTX)</span>
             <input
               ref={fileInputRef}
               type="file"
@@ -218,15 +218,15 @@ function StaffMaterialsView() {
           </label>
 
           <button type="submit" className="btn-primary" disabled={uploading}>
-            {uploading ? "Uploading…" : "Upload"}
+            {uploading ? "Качване…" : "Качи"}
           </button>
         </form>
       )}
 
-      {loading && <p className="loading-text">Loading…</p>}
+      {loading && <p className="loading-text">Зареждане…</p>}
 
       {!loading && courses.length === 0 && (
-        <p className="empty-text">No courses assigned to you yet.</p>
+        <p className="empty-text">Все още нямате назначени дисциплини.</p>
       )}
 
       {!loading && courses.length > 0 && (
@@ -244,9 +244,9 @@ function StaffMaterialsView() {
                 >
                   <span className="accordion-course-code">{course.code}</span>
                   <span className="accordion-course-name">{course.name}</span>
-                  <span className="accordion-meta">Year {course.year} · Sem {course.semester}</span>
+                  <span className="accordion-meta">Курс {course.year} · Сем {course.semester}</span>
                   <span className="accordion-count">
-                    {courseMaterials.length} file{courseMaterials.length !== 1 ? "s" : ""}
+                    {courseMaterials.length} файл{courseMaterials.length !== 1 ? "а" : ""}
                   </span>
                   <span className="accordion-chevron">
                     {openCourse === course.id ? "▲" : "▼"}
@@ -256,7 +256,7 @@ function StaffMaterialsView() {
                 {openCourse === course.id && (
                   <div className="accordion-body">
                     {courseMaterials.length === 0 ? (
-                      <p className="empty-text">No materials uploaded for this course yet.</p>
+                      <p className="empty-text">Все още няма качени материали за тази дисциплина.</p>
                     ) : (
                       <div className="materials-list">
                         {courseMaterials.map((m) => (
@@ -271,7 +271,7 @@ function StaffMaterialsView() {
                                   <div className="material-description">{m.description}</div>
                                 )}
                                 <div className="material-meta">
-                                  <span>Uploaded {formatDate(m.uploadedAt)}</span>
+                                  <span>Качено на {formatDate(m.uploadedAt)}</span>
                                 </div>
                               </div>
                             </div>
@@ -282,14 +282,14 @@ function StaffMaterialsView() {
                                 rel="noopener noreferrer"
                                 className="btn-secondary"
                               >
-                                View / Download
+                                Преглед / Изтегляне
                               </a>
                               <button
                                 type="button"
                                 className="btn-danger"
                                 onClick={() => handleDelete(m.id, course.id)}
                               >
-                                Delete
+                                Изтрий
                               </button>
                             </div>
                           </div>
@@ -318,22 +318,22 @@ function StudentMaterialsView() {
   useEffect(() => {
     api.get<{ semester: { name: string }; courses: CourseWithMaterials[] }>("/materials/courses")
       .then(setData)
-      .catch(() => setError("Failed to load materials"))
+      .catch(() => setError("Неуспешно зареждане на материали"))
       .finally(() => setLoading(false));
   }, []);
 
   return (
     <div className="materials-section">
-      <h2>Course Materials</h2>
+      <h2>Учебни материали</h2>
 
       {error && <div className="error-message">{error}</div>}
-      {loading && <p className="loading-text">Loading…</p>}
+      {loading && <p className="loading-text">Зареждане…</p>}
 
       {!loading && data && (
         <>
           <p className="semester-label">{data.semester.name}</p>
           {data.courses.length === 0 && (
-            <p className="empty-text">No courses enrolled this semester.</p>
+            <p className="empty-text">Няма записани дисциплини за този семестър.</p>
           )}
           <div className="course-accordion">
             {data.courses.map((course) => (
@@ -348,7 +348,7 @@ function StudentMaterialsView() {
                   <span className="accordion-course-code">{course.code}</span>
                   <span className="accordion-course-name">{course.name}</span>
                   <span className="accordion-count">
-                    {course.materials.length} file{course.materials.length !== 1 ? "s" : ""}
+                    {course.materials.length} файл{course.materials.length !== 1 ? "а" : ""}
                   </span>
                   <span className="accordion-chevron">
                     {openCourse === course.id ? "▲" : "▼"}
@@ -363,7 +363,7 @@ function StudentMaterialsView() {
                     </div>
 
                     {course.materials.length === 0 ? (
-                      <p className="empty-text">No materials uploaded for this course yet.</p>
+                      <p className="empty-text">Все още няма качени материали за тази дисциплина.</p>
                     ) : (
                       <div className="materials-list">
                         {course.materials.map((m) => (
@@ -378,7 +378,7 @@ function StudentMaterialsView() {
                                   <div className="material-description">{m.description}</div>
                                 )}
                                 <div className="material-meta">
-                                  <span>Uploaded {formatDate(m.uploadedAt)}</span>
+                                  <span>Качено на {formatDate(m.uploadedAt)}</span>
                                 </div>
                               </div>
                             </div>
@@ -389,7 +389,7 @@ function StudentMaterialsView() {
                                 rel="noopener noreferrer"
                                 className="btn-primary"
                               >
-                                View / Download
+                                Преглед / Изтегляне
                               </a>
                             </div>
                           </div>
@@ -422,20 +422,20 @@ export default function MaterialsPage() {
   return (
     <div className="app-layout">
       <nav className="top-nav">
-        <div className="top-nav-brand">University System</div>
+        <div className="top-nav-brand">Университетска Система</div>
         <div className="top-nav-links">
-          <Link to="/home" className="nav-link">Home</Link>
-          <Link to="/schedule" className="nav-link">Schedule</Link>
+          <Link to="/home" className="nav-link">Начало</Link>
+          <Link to="/schedule" className="nav-link">Разписание</Link>
           {isStaff && (
-            <Link to="/announcements" className="nav-link">Announcements</Link>
+            <Link to="/announcements" className="nav-link">Съобщения</Link>
           )}
-          <Link to="/materials" className="nav-link nav-link-active">Materials</Link>
-          <Link to="/grades" className="nav-link">Grades</Link>
+          <Link to="/materials" className="nav-link nav-link-active">Материали</Link>
+          <Link to="/grades" className="nav-link">Оценки</Link>
         </div>
         <div className="top-nav-user">
           <span>{user?.email}</span>
           <button type="button" onClick={handleLogout} className="nav-logout-button">
-            Logout
+            Изход
           </button>
         </div>
       </nav>

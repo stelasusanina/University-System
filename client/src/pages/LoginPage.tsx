@@ -30,13 +30,13 @@ export default function LoginPage() {
   return (
     <div className="login-container">
       <form onSubmit={handleSubmit} className="login-form">
-        <h1>University System</h1>
-        <h2>Login</h2>
+        <h1>Университетска Система</h1>
+        <h2>Вход</h2>
 
         {error && <div className="error-message">{error}</div>}
 
         <div className="form-group">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">Имейл</label>
           <input
             id="email"
             type="email"
@@ -47,7 +47,7 @@ export default function LoginPage() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">Парола</label>
           <input
             id="password"
             type="password"
@@ -58,11 +58,11 @@ export default function LoginPage() {
         </div>
 
         <button type="submit" disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
+          {loading ? "Влизане..." : "Вход"}
         </button>
 
         <p style={{ textAlign: "center", marginTop: "1rem" }}>
-          Don't have an account? <Link to="/register">Register</Link>
+          Нямате акаунт? <Link to="/register">Регистрация</Link>
         </p>
       </form>
     </div>

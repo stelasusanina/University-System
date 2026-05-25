@@ -29,7 +29,15 @@ interface Announcement {
   group: number | null;
 }
 
-const ANNOUNCEMENT_TYPES = ["INFO", "DELAY", "CANCELLATION", "ROOM_CHANGE", "URGENT"];
+const ANNOUNCEMENT_TYPES = ["ИНФОРМАЦИЯ", "ЗАКЪСНЕНИЕ", "ОТМЯНА", "СМЯНА_НА_ЗАЛА", "СПЕШНО"];
+
+const ANNOUNCEMENT_CSS: Record<string, string> = {
+  "ИНФОРМАЦИЯ": "info",
+  "ОТМЯНА": "cancellation",
+  "ЗАКЪСНЕНИЕ": "delay",
+  "СМЯНА_НА_ЗАЛА": "room_change",
+  "СПЕШНО": "urgent",
+};
 
 export default function ManageAnnouncementsPage() {
   const { user, logout } = useAuth();
@@ -45,7 +53,7 @@ export default function ManageAnnouncementsPage() {
 
   // Form state
   const [message, setMessage] = useState("");
-  const [type, setType] = useState("INFO");
+  const [type, setType] = useState("ИНФОРМАЦИЯ");
   const [validTo, setValidTo] = useState("");
   const [specialtyId, setSpecialtyId] = useState<number | "">("");
   const [year, setYear] = useState<number | "">("");
@@ -68,7 +76,7 @@ export default function ManageAnnouncementsPage() {
       setCourses(optionsData.courses);
       setSpecialties(optionsData.specialties);
     } catch {
-      setError("Failed to load data");
+      setError("Неуспешно зареждане на данни");
     } finally {
       setLoading(false);
     }
@@ -76,7 +84,7 @@ export default function ManageAnnouncementsPage() {
 
   function resetForm() {
     setMessage("");
-    setType("INFO");
+    setType("ИНФОРМАЦИЯ");
     setValidTo("");
     setSpecialtyId("");
     setYear("");
@@ -107,7 +115,7 @@ export default function ManageAnnouncementsPage() {
     setFormError("");
 
     if (!message.trim() || !validTo || !specialtyId || !year) {
-      setFormError("Message, valid until, specialty, and year are required.");
+      setFormError("Съобщение, валидност, специалност и курс са задължителни.");
       return;
     }
 
@@ -133,19 +141,19 @@ export default function ManageAnnouncementsPage() {
       setLoading(true);
       await loadData();
     } catch (err: any) {
-      setFormError(err.message || "Failed to save announcement");
+      setFormError(err.message || "Неуспешно запазване на съобщението");
     } finally {
       setSubmitting(false);
     }
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Delete this announcement?")) return;
+    if (!confirm("Изтриване на това съобщение?")) return;
     try {
       await api.delete(`/announcements/${id}`);
       setAnnouncements((prev) => prev.filter((a) => a.id !== id));
     } catch {
-      setError("Failed to delete announcement");
+      setError("Неуспешно изтриване на съобщението");
     }
   }
 
@@ -161,26 +169,26 @@ export default function ManageAnnouncementsPage() {
   return (
     <div className="app-layout">
       <nav className="top-nav">
-        <div className="top-nav-brand">University System</div>
+        <div className="top-nav-brand">Университетска Система</div>
         <div className="top-nav-links">
-          <Link to="/home" className="nav-link">Home</Link>
-          <Link to="/schedule" className="nav-link">Schedule</Link>
-          <Link to="/announcements" className="nav-link nav-link-active">Announcements</Link>
-          <Link to="/materials" className="nav-link">Materials</Link>
-          <Link to="/grades" className="nav-link">Grades</Link>
+          <Link to="/home" className="nav-link">Начало</Link>
+          <Link to="/schedule" className="nav-link">Разписание</Link>
+          <Link to="/announcements" className="nav-link nav-link-active">Съобщения</Link>
+          <Link to="/materials" className="nav-link">Материали</Link>
+          <Link to="/grades" className="nav-link">Оценки</Link>
         </div>
         <div className="top-nav-user">
           <span>{user?.email}</span>
-          <button type="button" onClick={handleLogout} className="nav-logout-button">Logout</button>
+          <button type="button" onClick={handleLogout} className="nav-logout-button">Изход</button>
         </div>
       </nav>
 
       <main className="home-main">
         <div className="manage-announcements-header">
-          <h1>Manage Announcements</h1>
+          <h1>Управление на съобщения</h1>
           {!showForm && (
             <button type="button" className="btn-primary" onClick={() => setShowForm(true)}>
-              + New Announcement
+              + Ново съобщение
             </button>
           )}
         </div>
@@ -189,12 +197,12 @@ export default function ManageAnnouncementsPage() {
 
         {showForm && (
           <form className="announcement-form" onSubmit={handleSubmit}>
-            <h2>{editingId ? "Edit Announcement" : "New Announcement"}</h2>
+            <h2>{editingId ? "Редактиране на съобщение" : "Ново съобщение"}</h2>
             {formError && <p className="error-message">{formError}</p>}
 
             <div className="form-row">
               <div className="form-group">
-                <label>Type</label>
+                <label>Вид</label>
                 <select value={type} onChange={(e) => setType(e.target.value)}>
                   {ANNOUNCEMENT_TYPES.map((t) => (
                     <option key={t} value={t}>{t.replace("_", " ")}</option>
@@ -202,45 +210,45 @@ export default function ManageAnnouncementsPage() {
                 </select>
               </div>
               <div className="form-group">
-                <label>Valid Until</label>
+                <label>Валидно до</label>
                 <input type="datetime-local" value={validTo} onChange={(e) => setValidTo(e.target.value)} required />
               </div>
             </div>
 
             <div className="form-group">
-              <label>Message</label>
-              <textarea rows={3} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Write your announcement..." required />
+              <label>Съобщение</label>
+              <textarea rows={3} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Напишете вашето съобщение..." required />
             </div>
 
             <div className="form-row">
               <div className="form-group">
-                <label>Specialty</label>
+                <label>Специалност</label>
                 <select value={specialtyId} onChange={(e) => { setSpecialtyId(e.target.value ? Number(e.target.value) : ""); setYear(""); setCourseId(""); }} required>
-                  <option value="">Select specialty</option>
+                  <option value="">Изберете специалност</option>
                   {specialties.map((s) => (
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
                 </select>
               </div>
               <div className="form-group">
-                <label>Year</label>
+                <label>Курс</label>
                 <select value={year} onChange={(e) => setYear(e.target.value ? Number(e.target.value) : "")} required disabled={!specialtyId}>
-                  <option value="">Select year</option>
+                  <option value="">Изберете курс</option>
                   {yearOptions.map((y) => (
                     <option key={y} value={y}>{y}</option>
                   ))}
                 </select>
               </div>
               <div className="form-group">
-                <label>Group (optional)</label>
-                <input type="number" min="1" value={group} onChange={(e) => setGroup(e.target.value ? Number(e.target.value) : "")} placeholder="All groups" />
+                <label>Група (по избор)</label>
+                <input type="number" min="1" value={group} onChange={(e) => setGroup(e.target.value ? Number(e.target.value) : "")} placeholder="Всички групи" />
               </div>
             </div>
 
             <div className="form-group">
-              <label>Course (optional)</label>
+              <label>Дисциплина (по избор)</label>
               <select value={courseId} onChange={(e) => setCourseId(e.target.value ? Number(e.target.value) : "")}>
-                <option value="">No specific course</option>
+                <option value="">Без конкретна дисциплина</option>
                 {filteredCourses.map((c) => (
                   <option key={c.id} value={c.id}>{c.code} — {c.name}</option>
                 ))}
@@ -249,34 +257,34 @@ export default function ManageAnnouncementsPage() {
 
             <div className="form-actions">
               <button type="submit" className="btn-primary" disabled={submitting}>
-                {submitting ? "Saving..." : editingId ? "Update" : "Create"}
+                {submitting ? "Запазване..." : editingId ? "Обнови" : "Създай"}
               </button>
-              <button type="button" className="btn-secondary" onClick={resetForm}>Cancel</button>
+              <button type="button" className="btn-secondary" onClick={resetForm}>Отказ</button>
             </div>
           </form>
         )}
 
         {loading ? (
-          <p>Loading...</p>
+          <p>Зареждане...</p>
         ) : !showForm && announcements.length === 0 ? (
-          <p className="calendar-no-events" style={{ marginTop: "1.5rem" }}>No active announcements</p>
+          <p className="calendar-no-events" style={{ marginTop: "1.5rem" }}>Няма активни съобщения</p>
         ) : !showForm && (
           <div className="announcements-list">
             {announcements.map((a) => (
-              <div key={a.id} className={`announcement-item announcement-${a.type.toLowerCase()}`}>
+              <div key={a.id} className={`announcement-item announcement-${ANNOUNCEMENT_CSS[a.type] ?? a.type.toLowerCase()}`}>
                 <div className="announcement-header">
-                  <span className={`announcement-badge announcement-badge-${a.type.toLowerCase()}`}>{a.type.replace("_", " ")}</span>
+                  <span className={`announcement-badge announcement-badge-${ANNOUNCEMENT_CSS[a.type] ?? a.type.toLowerCase()}`}>{a.type.replace("_", " ")}</span>
                   <span className="announcement-time">{dayjs(a.createdAt).format("D MMM, HH:mm")}</span>
                 </div>
                 <p className="announcement-message">{a.message}</p>
                 <div className="announcement-meta">
-                  {a.specialty && <span>{a.specialty.name}, Year {a.year}{a.group ? `, Group ${a.group}` : ""}</span>}
+                  {a.specialty && <span>{a.specialty.name}, Курс {a.year}{a.group ? `, Група ${a.group}` : ""}</span>}
                   {a.course && <span> · {a.course.name}</span>}
-                  <span className="announcement-valid-to">Valid until {dayjs(a.validTo).format("D MMM, HH:mm")}</span>
+                  <span className="announcement-valid-to">Валидно до {dayjs(a.validTo).format("D MMM, HH:mm")}</span>
                 </div>
                 <div className="announcement-actions">
                   <button type="button" className="btn-icon" onClick={() => startEdit(a)} title="Edit">✏️</button>
-                  <button type="button" className="btn-delete" onClick={() => handleDelete(a.id)}>Delete</button>
+                  <button type="button" className="btn-delete" onClick={() => handleDelete(a.id)}>Изтрий</button>
                 </div>
               </div>
             ))}

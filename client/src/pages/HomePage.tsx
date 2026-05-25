@@ -33,7 +33,15 @@ interface Specialty {
   years: number;
 }
 
-const EVENT_TYPES = ["TEST", "EXAM", "ASSIGNMENT", "PROJECT_DEFENSE", "OTHER"];
+const EVENT_TYPES = ["КОНТРОЛНА", "ИЗПИТ", "ЗАДАНИЕ", "ЗАЩИТА_НА_ПРОЕКТ", "ДРУГО"];
+
+const ANNOUNCEMENT_CSS: Record<string, string> = {
+  "ИНФОРМАЦИЯ": "info",
+  "ОТМЯНА": "cancellation",
+  "ЗАКЪСНЕНИЕ": "delay",
+  "СМЯНА_НА_ЗАЛА": "room_change",
+  "СПЕШНО": "urgent",
+};
 const STAFF_ROLES = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
 
 export default function HomePage() {
@@ -51,7 +59,7 @@ export default function HomePage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [formTitle, setFormTitle] = useState("");
-  const [formType, setFormType] = useState("TEST");
+  const [formType, setFormType] = useState("КОНТРОЛНА");
   const [formDate, setFormDate] = useState(selectedDate?.format("YYYY-MM-DD") ?? "");
   const [formStartTime, setFormStartTime] = useState("");
   const [formEndTime, setFormEndTime] = useState("");
@@ -93,7 +101,7 @@ export default function HomePage() {
 
   function openAddModal() {
     setFormTitle("");
-    setFormType("TEST");
+    setFormType("КОНТРОЛНА");
     setFormDate(selectedDate?.format("YYYY-MM-DD") ?? "");
     setFormStartTime("");
     setFormEndTime("");
@@ -119,7 +127,7 @@ export default function HomePage() {
   async function handleAddEvent(e: React.FormEvent) {
     e.preventDefault();
     if (!formTitle || !formType || !formDate || formCourseId === "" || formSpecialtyId === "" || formYear === "") {
-      setFormError("Title, type, date, course, specialty and year are required.");
+      setFormError("Заглавие, вид, дата, дисциплина, специалност и курс са задължителни.");
       return;
     }
     setSubmitting(true);
@@ -140,7 +148,7 @@ export default function HomePage() {
       setShowAddModal(false);
       loadEvents();
     } catch (err: any) {
-      setFormError(err.message || "Failed to create event");
+      setFormError(err.message || "Неуспешно създаване на събитие");
     } finally {
       setSubmitting(false);
     }
@@ -213,30 +221,30 @@ export default function HomePage() {
   return (
     <div className="app-layout">
       <nav className="top-nav">
-        <div className="top-nav-brand">University System</div>
+        <div className="top-nav-brand">Университетска Система</div>
         <div className="top-nav-links">
-          <Link to="/home" className="nav-link nav-link-active">Home</Link>
-          <Link to="/schedule" className="nav-link">Schedule</Link>
-          {user?.role !== "STUDENT" && <Link to="/announcements" className="nav-link">Announcements</Link>}
-          <Link to="/materials" className="nav-link">Materials</Link>
-          <Link to="/grades" className="nav-link">Grades</Link>
+          <Link to="/home" className="nav-link nav-link-active">Начало</Link>
+          <Link to="/schedule" className="nav-link">Разписание</Link>
+          {user?.role !== "STUDENT" && <Link to="/announcements" className="nav-link">Съобщения</Link>}
+          <Link to="/materials" className="nav-link">Материали</Link>
+          <Link to="/grades" className="nav-link">Оценки</Link>
         </div>
         <div className="top-nav-user">
           <span>{user?.email}</span>
           <button type="button" onClick={handleLogout} className="nav-logout-button">
-            Logout
+            Изход
           </button>
         </div>
       </nav>
 
       <main className="home-main">
-        <h1>Welcome, {user?.email}</h1>
+        <h1>Добре дошли, {user?.email}</h1>
         <div className="home-grid">
           <section className="calendar-card home-calendar-card">
             <div className="calendar-card-header">
               {isStaff && (
-                <button type="button" className="add-event-btn" onClick={openAddModal} title="Add event">
-                  + Add Event
+                <button type="button" className="add-event-btn" onClick={openAddModal} title="Добави събитие">
+                  + Добави събитие
                 </button>
               )}
             </div>
@@ -256,10 +264,10 @@ export default function HomePage() {
                     <strong>{event.course.name}</strong>
                     <span>{event.title}</span>
                     {event.startTime && <span>{event.startTime}{event.endTime ? `–${event.endTime}` : ""}</span>}
-                    {event.room && <span>Room {event.room}</span>}
+                    {event.room && <span>Зала {event.room}</span>}
                     {isStaff && event.specialty && (
                       <span className="calendar-event-meta">
-                        {event.specialty.name} · Year {event.year}{event.group != null ? ` · Group ${event.group}` : ""}
+                        {event.specialty.name} · Курс {event.year}{event.group != null ? ` · Група ${event.group}` : ""}
                       </span>
                     )}
                     {isStaff && (
@@ -267,26 +275,26 @@ export default function HomePage() {
                         type="button"
                         className="event-delete-btn"
                         onClick={() => handleDeleteEvent(event.id)}
-                        title="Remove event"
+                        title="Премахни събитие"
                       >
-                        Remove
+                        Премахни
                       </button>
                     )}
                   </div>
                 ))
               ) : (
-                <p className="calendar-no-events">Nothing planned</p>
+                <p className="calendar-no-events">Няма планирани събития</p>
               )}
             </div>
           </section>
 
           <section className="announcements-card">
-            <h2>{user?.role === "STUDENT" ? "Announcements" : "Announcements by me"}</h2>
+            <h2>{user?.role === "STUDENT" ? "Съобщения" : "Мои съобщения"}</h2>
             {announcements.length > 0 ? (
               announcements.map((a) => (
-                <div key={a.id} className={`announcement-item announcement-${a.type.toLowerCase()}`}>
+                <div key={a.id} className={`announcement-item announcement-${ANNOUNCEMENT_CSS[a.type] ?? a.type.toLowerCase()}`}>
                   <div className="announcement-header">
-                    <span className={`announcement-badge announcement-badge-${a.type.toLowerCase()}`}>{a.type.replace("_", " ")}</span>
+                    <span className={`announcement-badge announcement-badge-${ANNOUNCEMENT_CSS[a.type] ?? a.type.toLowerCase()}`}>{a.type.replace("_", " ")}</span>
                     <span className="announcement-time">{dayjs(a.createdAt).format("D MMM, HH:mm")}</span>
                   </div>
                   <p className="announcement-message">{a.message}</p>
@@ -299,7 +307,7 @@ export default function HomePage() {
                 </div>
               ))
             ) : (
-              <p className="calendar-no-events">No announcements</p>
+              <p className="calendar-no-events">Няма съобщения</p>
             )}
           </section>
         </div>
@@ -308,15 +316,15 @@ export default function HomePage() {
       {showAddModal && (
         <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h2>Add Event</h2>
+            <h2>Добави събитие</h2>
             <form onSubmit={handleAddEvent} className="event-form">
               <div className="form-group">
-                <label>Title</label>
+                <label>Заглавие</label>
                 <input value={formTitle} onChange={(e) => setFormTitle(e.target.value)} required />
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Type</label>
+                  <label>Вид</label>
                   <select value={formType} onChange={(e) => setFormType(e.target.value)}>
                     {EVENT_TYPES.map((t) => (
                       <option key={t} value={t}>{t.replace("_", " ")}</option>
@@ -324,28 +332,28 @@ export default function HomePage() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Date</label>
+                  <label>Дата</label>
                   <input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} required />
                 </div>
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Start Time</label>
+                  <label>Начален час</label>
                   <input type="time" value={formStartTime} onChange={(e) => setFormStartTime(e.target.value)} />
                 </div>
                 <div className="form-group">
-                  <label>End Time</label>
+                  <label>Краен час</label>
                   <input type="time" value={formEndTime} onChange={(e) => setFormEndTime(e.target.value)} />
                 </div>
                 <div className="form-group">
-                  <label>Room</label>
+                  <label>Зала</label>
                   <input value={formRoom} onChange={(e) => setFormRoom(e.target.value)} />
                 </div>
               </div>
               <div className="form-group">
-                <label>Course</label>
+                <label>Дисциплина</label>
                 <select value={formCourseId} onChange={(e) => handleCourseChange(e.target.value ? Number(e.target.value) : "")} required>
-                  <option value="">— select course —</option>
+                  <option value="">— изберете дисциплина —</option>
                   {courses.map((c) => (
                     <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
                   ))}
@@ -353,16 +361,16 @@ export default function HomePage() {
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Specialty</label>
+                  <label>Специалност</label>
                   <select value={formSpecialtyId} onChange={(e) => setFormSpecialtyId(e.target.value ? Number(e.target.value) : "")} required>
-                    <option value="">— select specialty —</option>
+                    <option value="">— изберете специалност —</option>
                     {specialties.map((s) => (
                       <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Year</label>
+                  <label>Курс</label>
                   <select value={formYear} onChange={(e) => setFormYear(e.target.value ? Number(e.target.value) : "")} required>
                     <option value="">—</option>
                     {selectedSpecialty
@@ -375,7 +383,7 @@ export default function HomePage() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Group (optional)</label>
+                  <label>Група (по избор)</label>
                   <input
                     type="number"
                     min={1}
@@ -386,9 +394,9 @@ export default function HomePage() {
               </div>
               {formError && <p className="form-error">{formError}</p>}
               <div className="form-actions">
-                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Отказ</button>
                 <button type="submit" className="btn-primary" disabled={submitting}>
-                  {submitting ? "Saving..." : "Add Event"}
+                  {submitting ? "Запазване..." : "Добави"}
                 </button>
               </div>
             </form>

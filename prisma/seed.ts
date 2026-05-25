@@ -208,7 +208,7 @@ try {
           studentId: student.id,
           courseId: course.id,
           semesterId: semester.id,
-          status: "ENROLLED",
+          status: "ЗАПИСАН",
         },
       });
     }
@@ -242,7 +242,7 @@ try {
       startTime: "10:00",
       endTime: "12:00",
       room: "1404",
-      type: "SEMINAR_EXERCISE",
+      type: "СЕМИНАРНО_УПРАЖНЕНИЕ",
     },
   });
 
@@ -257,7 +257,7 @@ try {
       startTime: "12:00",
       endTime: "14:00",
       room: "2205",
-      type: "LECTURE",
+      type: "ЛЕКЦИЯ",
     },
   });
 
@@ -272,7 +272,7 @@ try {
       startTime: "14:00",
       endTime: "16:00",
       room: "13102",
-      type: "LECTURE",
+      type: "ЛЕКЦИЯ",
     },
   });
   console.log("Schedules: 4 entries created");
@@ -307,7 +307,7 @@ try {
     update: {},
     create: {
       message: "Упражнението по Програмиране на 15.11 се провежда в зала 1404 вместо 1303.",
-      type: "ROOM_CHANGE",
+      type: "СМЯНА_НА_ЗАЛА",
       validTo: new Date("2025-11-15"),
       academicStaffId: staff1.id,
       courseId: course1.id,
@@ -323,7 +323,7 @@ try {
     update: {},
     create: {
       message: "Консултации по Дискретна математика всяка сряда от 10:00 до 12:00 в каб. 2301.",
-      type: "INFO",
+      type: "ИНФОРМАЦИЯ",
       validTo: new Date("2026-01-31"),
       academicStaffId: staff2.id,
       courseId: course2.id,
@@ -338,7 +338,7 @@ try {
     update: {},
     create: {
       message: "Контролно по Програмиране – основи на 20.11 от 08:00 в зала 1303. Носете лична карта.",
-      type: "URGENT",
+      type: "СПЕШНО",
       validTo: new Date("2025-11-20"),
       academicStaffId: staff1.id,
       courseId: course1.id,
@@ -356,7 +356,7 @@ try {
     update: {},
     create: {
       title: "Контролно 1 – Програмиране основи",
-      type: "TEST",
+      type: "КОНТРОЛНА",
       date: new Date("2025-11-20"),
       startTime: "08:00",
       endTime: "10:00",
@@ -375,7 +375,7 @@ try {
     update: {},
     create: {
       title: "Изпит – Дискретна математика",
-      type: "EXAM",
+      type: "ИЗПИТ",
       date: new Date("2026-01-28"),
       startTime: "10:00",
       endTime: "13:00",
@@ -393,7 +393,7 @@ try {
     update: {},
     create: {
       title: "Курсов проект – Програмиране основи",
-      type: "PROJECT_DEFENSE",
+      type: "ЗАЩИТА_НА_ПРОЕКТ",
       date: new Date("2026-01-15"),
       startTime: "14:00",
       endTime: "16:00",

@@ -26,7 +26,7 @@ export async function createAnnouncement(
   const announcement = await prisma.announcement.create({
     data: {
       message: body.message,
-      type: (body.type as any) ?? "INFO",
+      type: (body.type as any) ?? "ИНФОРМАЦИЯ",
       validTo: new Date(body.validTo),
       academicStaffId: user.academicStaff.id,
       courseId: body.courseId ?? null,

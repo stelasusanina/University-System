@@ -99,7 +99,7 @@ export async function setGrade(
     where: { id: enrollmentId },
     data: {
       grade: grade ?? null,
-      ...(status ? { status: status as "ENROLLED" | "PASSED" | "FAILED" | "WITHDRAWN" } : {}),
+      ...(status ? { status: status as "ЗАПИСАН" | "ПОЛОЖЕН" | "НЕПОЛОЖЕН" | "ОТПИСАН" } : {}),
     },
     select: {
       id: true,

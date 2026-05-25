@@ -8,11 +8,11 @@ import type { ProgramResponse, TimetableEntry } from "../types/schedule";
 const dayOrder = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 
 const dayLabels: Record<string, string> = {
-  MONDAY: "Monday",
-  TUESDAY: "Tuesday",
-  WEDNESDAY: "Wednesday",
-  THURSDAY: "Thursday",
-  FRIDAY: "Friday",
+  MONDAY: "Понеделник",
+  TUESDAY: "Вторник",
+  WEDNESDAY: "Сряда",
+  THURSDAY: "Четвъртък",
+  FRIDAY: "Петък",
 };
 
 
@@ -118,30 +118,30 @@ export default function SchedulePage() {
   return (
     <div className="app-layout">
       <nav className="top-nav">
-        <div className="top-nav-brand">University System</div>
+        <div className="top-nav-brand">Университетска Система</div>
         <div className="top-nav-links">
-          <Link to="/home" className="nav-link">Home</Link>
-          <Link to="/schedule" className="nav-link nav-link-active">Schedule</Link>
-          {isStaff && <Link to="/announcements" className="nav-link">Announcements</Link>}
-          <Link to="/materials" className="nav-link">Materials</Link>
-          <Link to="/grades" className="nav-link">Grades</Link>
+          <Link to="/home" className="nav-link">Начало</Link>
+          <Link to="/schedule" className="nav-link nav-link-active">Разписание</Link>
+          {isStaff && <Link to="/announcements" className="nav-link">Съобщения</Link>}
+          <Link to="/materials" className="nav-link">Материали</Link>
+          <Link to="/grades" className="nav-link">Оценки</Link>
         </div>
         <div className="top-nav-user">
           <span>{user?.email}</span>
-          <button type="button" onClick={handleLogout} className="nav-logout-button">Logout</button>
+          <button type="button" onClick={handleLogout} className="nav-logout-button">Изход</button>
         </div>
       </nav>
 
       <main className="home-main">
-        {loading && <p>Loading program...</p>}
+        {loading && <p>Зареждане на разписание...</p>}
 
         {!loading && error && <div className="error-message">{error}</div>}
 
         {!loading && !error && program && (
           <div className="program-layout">
             <section className="program-card">
-              <h2>Weekly Program</h2>
-              {timetableEntries.length === 0 && <p>No schedule entries yet.</p>}
+              <h2>Седмична програма</h2>
+              {timetableEntries.length === 0 && <p>Все още няма записи в разписанието.</p>}
 
               {timetableEntries.length > 0 && (
                 <>
@@ -149,7 +149,7 @@ export default function SchedulePage() {
                     <table className="timetable-table">
                       <thead>
                         <tr>
-                          <th>Time</th>
+                          <th>Час</th>
                           {dayOrder.map((day) => (
                             <th key={day}>{dayLabels[day]}</th>
                           ))}
@@ -181,10 +181,10 @@ export default function SchedulePage() {
                                             className="room-link-button"
                                             onClick={() => handleRoomClick(entry)}
                                           >
-                                            Room {entry.room}
+                                            Зала {entry.room}
                                           </button>
                                         ) : (
-                                          <div className="timetable-meta">Room {entry.room}</div>
+                                          <div className="timetable-meta">Зала {entry.room}</div>
                                         )}
                                         {entry.lecturerName && (
                                           <div className="timetable-meta">{entry.lecturerName}</div>

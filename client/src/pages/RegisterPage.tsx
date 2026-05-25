@@ -20,7 +20,7 @@ export default function RegisterPage() {
     setError("");
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError("Паролите не съвпадат");
       return;
     }
 
@@ -46,13 +46,13 @@ export default function RegisterPage() {
   return (
     <div className="login-container">
       <form onSubmit={handleSubmit} className="login-form">
-        <h1>University System</h1>
-        <h2>Register</h2>
+        <h1>Университетска Система</h1>
+        <h2>Регистрация</h2>
 
         {error && <div className="error-message">{error}</div>}
 
         <div className="form-group">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">Имейл</label>
           <input
             id="email"
             type="email"
@@ -63,19 +63,19 @@ export default function RegisterPage() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="identifierNumber">Faculty / Staff Number</label>
+          <label htmlFor="identifierNumber">Факултетен / Служебен номер</label>
           <input
             id="identifierNumber"
             type="text"
             value={identifierNumber}
             onChange={(e) => setIdentifierNumber(e.target.value)}
-            placeholder="e.g. 12345678"
+            placeholder="напр. 12345678"
             required
           />
         </div>
 
         <div className="form-group">
-          <label htmlFor="firstName">First Name</label>
+          <label htmlFor="firstName">Име</label>
           <input
             id="firstName"
             type="text"
@@ -86,7 +86,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="lastName">Last Name</label>
+          <label htmlFor="lastName">Фамилия</label>
           <input
             id="lastName"
             type="text"
@@ -97,7 +97,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">Парола</label>
           <input
             id="password"
             type="password"
@@ -108,7 +108,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="confirmPassword">Confirm Password</label>
+          <label htmlFor="confirmPassword">Потвърди парола</label>
           <input
             id="confirmPassword"
             type="password"
@@ -119,11 +119,11 @@ export default function RegisterPage() {
         </div>
 
         <button type="submit" disabled={loading}>
-          {loading ? "Registering..." : "Register"}
+          {loading ? "Регистриране..." : "Регистрация"}
         </button>
 
         <p style={{ textAlign: "center", marginTop: "1rem" }}>
-          Already have an account? <Link to="/login">Login</Link>
+          Вече имате акаунт? <Link to="/login">Вход</Link>
         </p>
       </form>
     </div>

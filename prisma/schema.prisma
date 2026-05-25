@@ -136,7 +136,7 @@ model Enrollment {
   courseId   Int
   semesterId Int
   grade      Float?
-  status     EnrollmentStatus @default(ENROLLED)
+  status     EnrollmentStatus @default(ЗАПИСАН)
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
 
@@ -156,7 +156,7 @@ model Schedule {
   startTime   String   @db.VarChar(5)
   endTime     String   @db.VarChar(5)
   room        String   @db.VarChar(50)
-  type        LessonType @default(LECTURE)
+  type        LessonType @default(ЛЕКЦИЯ)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -193,7 +193,7 @@ model Channel {
 model Announcement {
   id              Int              @id @default(autoincrement())
   message         String           @db.Text
-  type            AnnouncementType @default(INFO)
+  type            AnnouncementType @default(ИНФОРМАЦИЯ)
   validTo         DateTime
   academicStaffId Int
   courseId         Int?
@@ -248,11 +248,11 @@ model Event {
 }
 
 enum AnnouncementType {
-  INFO
-  CANCELLATION
-  DELAY
-  ROOM_CHANGE
-  URGENT
+  ИНФОРМАЦИЯ
+  ОТМЯНА
+  ЗАКЪСНЕНИЕ
+  СМЯНА_НА_ЗАЛА
+  СПЕШНО
 }
 
 enum UserRole {
@@ -294,10 +294,10 @@ enum SemesterPeriod {
 }
 
 enum EnrollmentStatus {
-  ENROLLED
-  PASSED
-  FAILED
-  WITHDRAWN
+  ЗАПИСАН
+  ПОЛОЖЕН
+  НЕПОЛОЖЕН
+  ОТПИСАН
 }
 
 enum DayOfWeek {
@@ -309,15 +309,15 @@ enum DayOfWeek {
 }
 
 enum LessonType {
-  LECTURE
-  SEMINAR_EXERCISE
-  LAB_EXERCISE
+  ЛЕКЦИЯ
+  СЕМИНАРНО_УПРАЖНЕНИЕ
+  ЛАБОРАТОРНО_УПРАЖНЕНИЕ
 }
 
 enum EventType {
-  TEST
-  EXAM
-  ASSIGNMENT
-  PROJECT_DEFENSE
-  OTHER
+  КОНТРОЛНА
+  ИЗПИТ
+  ЗАДАНИЕ
+  ЗАЩИТА_НА_ПРОЕКТ
+  ДРУГО
 }

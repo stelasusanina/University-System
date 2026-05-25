@@ -5,7 +5,7 @@ import { api } from "../services/api";
 
 const STAFF_ROLES = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
 
-const ENROLLMENT_STATUSES = ["ENROLLED", "PASSED", "FAILED", "WITHDRAWN"];
+const ENROLLMENT_STATUSES = ["ЗАПИСАН", "ПОЛОЖЕН", "НЕПОЛОЖЕН", "ОТПИСАН"];
 
 interface CourseRow {
   id: number;
@@ -58,9 +58,9 @@ function gradeColor(grade: number | null) {
 
 function statusBadgeClass(status: string) {
   switch (status) {
-    case "PASSED": return "status-passed";
-    case "FAILED": return "status-failed";
-    case "WITHDRAWN": return "status-withdrawn";
+    case "ПОЛОЖЕН": return "status-passed";
+    case "НЕПОЛОЖЕН": return "status-failed";
+    case "ОТПИСАН": return "status-withdrawn";
     default: return "status-enrolled";
   }
 }
@@ -80,7 +80,7 @@ function StaffGradesView() {
   useEffect(() => {
     api.get<{ semester: { name: string }; courses: CourseRow[] }>("/grades/courses")
       .then((res) => { setSemesterName(res.semester.name); setCourses(res.courses); })
-      .catch(() => setError("Failed to load courses"))
+      .catch(() => setError("Неуспешно зареждане на дисциплини"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -101,7 +101,7 @@ function StaffGradesView() {
       setEditGrade((prev) => ({ ...prev, ...gradeInit }));
       setEditStatus((prev) => ({ ...prev, ...statusInit }));
     } catch {
-      setError("Failed to load enrollments");
+      setError("Неуспешно зареждане на записванията");
     } finally {
       setLoadingCourse(null);
     }
@@ -125,7 +125,7 @@ function StaffGradesView() {
         return next;
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
+      setError(err instanceof Error ? err.message : "Неуспешно запазване");
     } finally {
       setSaving(null);
     }
@@ -133,13 +133,13 @@ function StaffGradesView() {
 
   return (
     <div className="grades-section">
-      <h2>Grades</h2>
+      <h2>Оценки</h2>
       {semesterName && <p className="semester-label">{semesterName}</p>}
       {error && <div className="error-message">{error}</div>}
-      {loading && <p className="loading-text">Loading…</p>}
+      {loading && <p className="loading-text">Зареждане…</p>}
 
       {!loading && courses.length === 0 && (
-        <p className="empty-text">No courses scheduled this semester.</p>
+        <p className="empty-text">Няма дисциплини за този семестър.</p>
       )}
 
       <div className="course-accordion">
@@ -152,17 +152,17 @@ function StaffGradesView() {
             >
               <span className="accordion-course-code">{course.code}</span>
               <span className="accordion-course-name">{course.name}</span>
-              <span className="accordion-meta">Year {course.year} · Sem {course.semester}</span>
-              <span className="accordion-count">{course._count.enrollments} students</span>
+              <span className="accordion-meta">Курс {course.year} · Сем {course.semester}</span>
+              <span className="accordion-count">{course._count.enrollments} студенти</span>
               <span className="accordion-chevron">{openCourse === course.id ? "▲" : "▼"}</span>
             </button>
 
             {openCourse === course.id && (
               <div className="accordion-body">
-                {loadingCourse === course.id && <p className="loading-text">Loading students…</p>}
+                {loadingCourse === course.id && <p className="loading-text">Зареждане на студенти…</p>}
 
                 {enrollments[course.id] && enrollments[course.id].length === 0 && (
-                  <p className="empty-text">No students enrolled.</p>
+                  <p className="empty-text">Няма записани студенти.</p>
                 )}
 
                 {enrollments[course.id] && enrollments[course.id].length > 0 && (() => {
@@ -179,11 +179,11 @@ function StaffGradesView() {
                   <table className="grades-table">
                     <thead>
                       <tr>
-                        <th>Faculty №</th>
-                        <th>Name</th>
-                        <th>Year</th>
-                        <th>Grade</th>
-                        <th>Status</th>
+                        <th>Фак. №</th>
+                        <th>Име</th>
+                        <th>Курс</th>
+                        <th>Оценка</th>
+                        <th>Статус</th>
                         <th></th>
                       </tr>
                     </thead>
@@ -191,7 +191,7 @@ function StaffGradesView() {
                       {sortedGroups.map((group) => (
                         <>
                           <tr key={`group-${group}`} className="grades-group-header-row">
-                            <td colSpan={6}>Group {group}</td>
+                            <td colSpan={6}>Група {group}</td>
                           </tr>
                           {byGroup.get(group)!.map((e) => (
                             <tr key={e.id}>
@@ -232,7 +232,7 @@ function StaffGradesView() {
                                   disabled={saving === e.id}
                                   onClick={() => handleSave(e.id)}
                                 >
-                                  {saving === e.id ? "…" : "Save"}
+                                  {saving === e.id ? "…" : "Запази"}
                                 </button>
                               </td>
                             </tr>
@@ -260,17 +260,17 @@ function StudentGradesView() {
   useEffect(() => {
     api.get<{ semesters: SemesterGrades[] }>("/grades/my")
       .then((res) => setSemesters(res.semesters))
-      .catch(() => setError("Failed to load grades"))
+      .catch(() => setError("Неуспешно зареждане на оценките"))
       .finally(() => setLoading(false));
   }, []);
 
   return (
     <div className="grades-section">
-      <h2>My Grades</h2>
+      <h2>Моите оценки</h2>
       {error && <div className="error-message">{error}</div>}
-      {loading && <p className="loading-text">Loading…</p>}
+      {loading && <p className="loading-text">Зареждане…</p>}
       {!loading && semesters.length === 0 && (
-        <p className="empty-text">No grade records found.</p>
+        <p className="empty-text">Няма намерени оценки.</p>
       )}
 
       {semesters.map((sg) => {
@@ -284,7 +284,7 @@ function StudentGradesView() {
           <div key={sg.semester.id} className="grades-semester-block">
             <div className="grades-semester-header">
               <span className="grades-semester-name">{sg.semester.name}</span>
-              {avg && <span className="grades-avg">Average: <strong>{avg}</strong></span>}
+              {avg && <span className="grades-avg">Среден успех: <strong>{avg}</strong></span>}
             </div>
 
             <table className="grades-table">
@@ -341,17 +341,17 @@ export default function GradesPage() {
   return (
     <div className="app-layout">
       <nav className="top-nav">
-        <div className="top-nav-brand">University System</div>
+        <div className="top-nav-brand">Университетска Система</div>
         <div className="top-nav-links">
-          <Link to="/home" className="nav-link">Home</Link>
-          <Link to="/schedule" className="nav-link">Schedule</Link>
-          {isStaff && <Link to="/announcements" className="nav-link">Announcements</Link>}
-          <Link to="/materials" className="nav-link">Materials</Link>
-          <Link to="/grades" className="nav-link nav-link-active">Grades</Link>
+          <Link to="/home" className="nav-link">Начало</Link>
+          <Link to="/schedule" className="nav-link">Разписание</Link>
+          {isStaff && <Link to="/announcements" className="nav-link">Съобщения</Link>}
+          <Link to="/materials" className="nav-link">Материали</Link>
+          <Link to="/grades" className="nav-link nav-link-active">Оценки</Link>
         </div>
         <div className="top-nav-user">
           <span>{user?.email}</span>
-          <button type="button" onClick={handleLogout} className="nav-logout-button">Logout</button>
+          <button type="button" onClick={handleLogout} className="nav-logout-button">Изход</button>
         </div>
       </nav>
 
