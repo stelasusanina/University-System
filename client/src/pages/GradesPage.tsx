@@ -2,51 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
+import type { CourseRow, EnrollmentRow, SemesterGrades } from "@shared/types/grades";
 
 const STAFF_ROLES = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
 
 const ENROLLMENT_STATUSES = ["ЗАПИСАН", "ПОЛОЖЕН", "НЕПОЛОЖЕН", "ОТПИСАН"];
-
-interface CourseRow {
-  id: number;
-  code: string;
-  name: string;
-  year: number;
-  semester: number;
-  _count: { enrollments: number };
-}
-
-interface EnrollmentRow {
-  id: number;
-  grade: number | null;
-  status: string;
-  student: {
-    id: number;
-    facultyNumber: string;
-    firstName: string;
-    lastName: string;
-    year: number;
-    group: number;
-  };
-}
-
-interface SemesterGrades {
-  semester: { id: number; name: string; year: number; period: string };
-  enrollments: {
-    id: number;
-    grade: number | null;
-    status: string;
-    course: {
-      id: number;
-      code: string;
-      name: string;
-      credits: number;
-      year: number;
-      semester: number;
-      academicStaff: { firstName: string; lastName: string; title: string };
-    };
-  }[];
-}
 
 function gradeColor(grade: number | null) {
   if (grade === null) return "";
