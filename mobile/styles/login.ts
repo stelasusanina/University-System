@@ -10,6 +10,12 @@ export const loginStyles = StyleSheet.create({
     justifyContent: "center",
     padding: 24,
   },
+  logo: {
+    width: 80,
+    height: 80,
+    alignSelf: "center",
+    marginBottom: 16,
+  },
   title: {
     fontSize: 22,
     fontWeight: "700",

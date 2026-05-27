@@ -1,8 +1,7 @@
-import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
-import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
+import Navbar from "../components/Navbar";
 
 interface Course {
   id: number;
@@ -40,9 +39,6 @@ const ANNOUNCEMENT_CSS: Record<string, string> = {
 };
 
 export default function ManageAnnouncementsPage() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
@@ -157,31 +153,13 @@ export default function ManageAnnouncementsPage() {
     }
   }
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
   const selectedSpecialty = specialties.find((s) => s.id === specialtyId);
   const yearOptions = selectedSpecialty ? Array.from({ length: selectedSpecialty.years }, (_, i) => i + 1) : [];
   const filteredCourses = specialtyId ? courses.filter((c) => c.specialtyId === specialtyId) : courses;
 
   return (
     <div className="app-layout">
-      <nav className="top-nav">
-        <div className="top-nav-brand">Университетска Система</div>
-        <div className="top-nav-links">
-          <Link to="/home" className="nav-link">Начало</Link>
-          <Link to="/schedule" className="nav-link">Разписание</Link>
-          <Link to="/announcements" className="nav-link nav-link-active">Съобщения</Link>
-          <Link to="/materials" className="nav-link">Материали</Link>
-          <Link to="/grades" className="nav-link">Оценки</Link>
-        </div>
-        <div className="top-nav-user">
-          <span>{user?.email}</span>
-          <button type="button" onClick={handleLogout} className="nav-logout-button">Изход</button>
-        </div>
-      </nav>
+      <Navbar />
 
       <main className="home-main">
         <div className="manage-announcements-header">

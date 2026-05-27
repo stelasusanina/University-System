@@ -9,7 +9,14 @@ import MaterialsPage from "./pages/MaterialsPage";
 import GradesPage from "./pages/GradesPage";
 import MapPage from "./pages/MapPage";
 import ProtectedRoute from "./components/ProtectedRoute";
-import "./App.css";
+import "./styles/base.css";
+import "./styles/layout.css";
+import "./styles/buttons.css";
+import "./styles/calendar.css";
+import "./styles/schedule.css";
+import "./styles/materials.css";
+import "./styles/announcements.css";
+import "./styles/grades.css";
 
 function App() {
   return (

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
 import type { CourseRow, EnrollmentRow, SemesterGrades } from "@shared/types/grades";
+import Navbar from "../components/Navbar";
 
 const STAFF_ROLES = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
 
@@ -253,31 +253,12 @@ function StudentGradesView() {
 // ── Page shell ────────────────────────────────────────────────────────────────
 
 export default function GradesPage() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const isStaff = STAFF_ROLES.includes(user?.role ?? "");
-
-  function handleLogout() {
-    logout();
-    navigate("/login");
-  }
 
   return (
     <div className="app-layout">
-      <nav className="top-nav">
-        <div className="top-nav-brand">Университетска Система</div>
-        <div className="top-nav-links">
-          <Link to="/home" className="nav-link">Начало</Link>
-          <Link to="/schedule" className="nav-link">Разписание</Link>
-          {isStaff && <Link to="/announcements" className="nav-link">Съобщения</Link>}
-          <Link to="/materials" className="nav-link">Материали</Link>
-          <Link to="/grades" className="nav-link nav-link-active">Оценки</Link>
-        </div>
-        <div className="top-nav-user">
-          <span>{user?.email}</span>
-          <button type="button" onClick={handleLogout} className="nav-logout-button">Изход</button>
-        </div>
-      </nav>
+      <Navbar />
 
       <main className="home-main">
         {isStaff ? <StaffGradesView /> : <StudentGradesView />}

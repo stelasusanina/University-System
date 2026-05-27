@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.tsx";
-import { useNavigate, Link } from "react-router-dom";
 import { api } from "../services/api.ts";
 import type { BuildingInfo } from "../types/building";
+import Navbar from "../components/Navbar";
 import type { ProgramResponse, TimetableEntry } from "../types/schedule";
 
 const dayOrder = ["ПОНЕДЕЛНИК", "ВТОРНИК", "СРЯДА", "ЧЕТВЪРТЪК", "ПЕТЪК"];
@@ -16,8 +16,7 @@ const dayLabels: Record<string, string> = {
 };
 
 export default function SchedulePage() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const [program, setProgram] = useState<ProgramResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -52,11 +51,6 @@ export default function SchedulePage() {
       isMounted = false;
     };
   }, [isStudent]);
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
 
   const timetableEntries: TimetableEntry[] =
     program?.courses.flatMap((course) =>
@@ -112,24 +106,9 @@ export default function SchedulePage() {
     window.open(`/map?${params.toString()}`, "_blank", "noopener,noreferrer");
   };
 
-  const isStaff = user?.role !== "STUDENT";
-
   return (
     <div className="app-layout">
-      <nav className="top-nav">
-        <div className="top-nav-brand">Университетска Система</div>
-        <div className="top-nav-links">
-          <Link to="/home" className="nav-link">Начало</Link>
-          <Link to="/schedule" className="nav-link nav-link-active">Разписание</Link>
-          {isStaff && <Link to="/announcements" className="nav-link">Съобщения</Link>}
-          <Link to="/materials" className="nav-link">Материали</Link>
-          <Link to="/grades" className="nav-link">Оценки</Link>
-        </div>
-        <div className="top-nav-user">
-          <span>{user?.email}</span>
-          <button type="button" onClick={handleLogout} className="nav-logout-button">Изход</button>
-        </div>
-      </nav>
+      <Navbar />
 
       <main className="home-main">
         {loading && <p>Зареждане на разписание...</p>}

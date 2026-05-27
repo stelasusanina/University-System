@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
-
-// ── Types ─────────────────────────────────────────────────────────────────────
+import Navbar from "../components/Navbar";
 
 interface MaterialItem {
   id: number;
@@ -307,8 +305,6 @@ function StaffMaterialsView() {
   );
 }
 
-// ── Student view ──────────────────────────────────────────────────────────────
-
 function StudentMaterialsView() {
   const [data, setData] = useState<{ semester: { name: string }; courses: CourseWithMaterials[] } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -407,38 +403,13 @@ function StudentMaterialsView() {
   );
 }
 
-// ── Page shell ────────────────────────────────────────────────────────────────
-
 export default function MaterialsPage() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const isStaff = STAFF_ROLES.includes(user?.role ?? "");
-
-  function handleLogout() {
-    logout();
-    navigate("/login");
-  }
 
   return (
     <div className="app-layout">
-      <nav className="top-nav">
-        <div className="top-nav-brand">Университетска Система</div>
-        <div className="top-nav-links">
-          <Link to="/home" className="nav-link">Начало</Link>
-          <Link to="/schedule" className="nav-link">Разписание</Link>
-          {isStaff && (
-            <Link to="/announcements" className="nav-link">Съобщения</Link>
-          )}
-          <Link to="/materials" className="nav-link nav-link-active">Материали</Link>
-          <Link to="/grades" className="nav-link">Оценки</Link>
-        </div>
-        <div className="top-nav-user">
-          <span>{user?.email}</span>
-          <button type="button" onClick={handleLogout} className="nav-logout-button">
-            Изход
-          </button>
-        </div>
-      </nav>
+      <Navbar />
 
       <main className="home-main">
         {isStaff ? <StaffMaterialsView /> : <StudentMaterialsView />}

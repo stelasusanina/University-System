@@ -1,4 +1,3 @@
-import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import dayjs, { type Dayjs } from "dayjs";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -8,6 +7,7 @@ import { PickerDay, type PickerDayProps } from "@mui/x-date-pickers/PickerDay";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
 import type { EventItem, EventsResponse } from "../types/events";
+import Navbar from "../components/Navbar";
 
 interface Announcement {
   id: number;
@@ -45,8 +45,7 @@ const ANNOUNCEMENT_CSS: Record<string, string> = {
 const STAFF_ROLES = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
 
 export default function HomePage() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
   const [highlightedDates, setHighlightedDates] = useState<Set<string>>(new Set());
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -93,11 +92,6 @@ export default function HomePage() {
         .catch(() => {});
     }
   }, [isStaff]);
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
 
   function openAddModal() {
     setFormTitle("");
@@ -220,22 +214,7 @@ export default function HomePage() {
 
   return (
     <div className="app-layout">
-      <nav className="top-nav">
-        <div className="top-nav-brand">Университетска Система</div>
-        <div className="top-nav-links">
-          <Link to="/home" className="nav-link nav-link-active">Начало</Link>
-          <Link to="/schedule" className="nav-link">Разписание</Link>
-          {user?.role !== "STUDENT" && <Link to="/announcements" className="nav-link">Съобщения</Link>}
-          <Link to="/materials" className="nav-link">Материали</Link>
-          <Link to="/grades" className="nav-link">Оценки</Link>
-        </div>
-        <div className="top-nav-user">
-          <span>{user?.email}</span>
-          <button type="button" onClick={handleLogout} className="nav-logout-button">
-            Изход
-          </button>
-        </div>
-      </nav>
+      <Navbar />
 
       <main className="home-main">
         <h1>Добре дошли, {user?.email}</h1>

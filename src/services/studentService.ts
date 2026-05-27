@@ -46,7 +46,6 @@ export async function getStudentProgram(userId: number): Promise<{ error: string
       semesterId: currentSemester.id,
     },
     select: {
-      status: true,
       course: {
         select: {
           id: true,
@@ -75,11 +74,10 @@ export async function getStudentProgram(userId: number): Promise<{ error: string
     data: {
       student: { ...studentData, specialty: specialty.name, faculty: specialty.faculty.name },
       semester: currentSemester,
-      courses: enrollments.map(({ status, course }) => {
+      courses: enrollments.map(({ course }) => {
         const { academicStaff, schedules, ...courseData } = course;
         return {
           ...courseData,
-          status,
           lecturer: academicStaff,
           schedules: schedules.map((schedule) => {
             const num = getBuildingNumberFromRoom(schedule.room);

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { authService } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
+import blueLogo from "@shared/assets/blue_logo.png";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -46,8 +47,8 @@ export default function RegisterPage() {
   return (
     <div className="login-container">
       <form onSubmit={handleSubmit} className="login-form">
-        <h1>Университетска Система</h1>
-        <h2>Регистрация</h2>
+        <img src={blueLogo} alt="УниПортал" className="login-logo" />
+        <h1>УниПортал</h1>
 
         {error && <div className="error-message">{error}</div>}
 
@@ -69,31 +70,32 @@ export default function RegisterPage() {
             type="text"
             value={identifierNumber}
             onChange={(e) => setIdentifierNumber(e.target.value)}
-            placeholder="напр. 12345678"
             required
           />
         </div>
 
-        <div className="form-group">
-          <label htmlFor="firstName">Име</label>
-          <input
-            id="firstName"
-            type="text"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            required
-          />
-        </div>
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="firstName">Име</label>
+            <input
+              id="firstName"
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+            />
+          </div>
 
-        <div className="form-group">
-          <label htmlFor="lastName">Фамилия</label>
-          <input
-            id="lastName"
-            type="text"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            required
-          />
+          <div className="form-group">
+            <label htmlFor="lastName">Фамилия</label>
+            <input
+              id="lastName"
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              required
+            />
+          </div>
         </div>
 
         <div className="form-group">
@@ -122,7 +124,7 @@ export default function RegisterPage() {
           {loading ? "Регистриране..." : "Регистрация"}
         </button>
 
-        <p style={{ textAlign: "center", marginTop: "1rem" }}>
+        <p className="login-form-footer">
           Вече имате акаунт? <Link to="/login">Вход</Link>
         </p>
       </form>

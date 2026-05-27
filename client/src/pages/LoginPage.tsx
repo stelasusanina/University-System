@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { authService } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
+import blueLogo from "@shared/assets/blue_logo.png";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -30,8 +31,8 @@ export default function LoginPage() {
   return (
     <div className="login-container">
       <form onSubmit={handleSubmit} className="login-form">
-        <h1>Университетска Система</h1>
-        <h2>Вход</h2>
+        <img src={blueLogo} alt="УниПортал" className="login-logo" />
+        <h1>УниПортал</h1>
 
         {error && <div className="error-message">{error}</div>}
 
@@ -61,7 +62,7 @@ export default function LoginPage() {
           {loading ? "Влизане..." : "Вход"}
         </button>
 
-        <p style={{ textAlign: "center", marginTop: "1rem" }}>
+        <p className="login-form-footer">
           Нямате акаунт? <Link to="/register">Регистрация</Link>
         </p>
       </form>
