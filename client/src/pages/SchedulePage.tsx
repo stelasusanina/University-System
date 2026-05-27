@@ -5,16 +5,15 @@ import { api } from "../services/api.ts";
 import type { BuildingInfo } from "../types/building";
 import type { ProgramResponse, TimetableEntry } from "../types/schedule";
 
-const dayOrder = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
+const dayOrder = ["ПОНЕДЕЛНИК", "ВТОРНИК", "СРЯДА", "ЧЕТВЪРТЪК", "ПЕТЪК"];
 
 const dayLabels: Record<string, string> = {
-  MONDAY: "Понеделник",
-  TUESDAY: "Вторник",
-  WEDNESDAY: "Сряда",
-  THURSDAY: "Четвъртък",
-  FRIDAY: "Петък",
+  ПОНЕДЕЛНИК: "Понеделник",
+  ВТОРНИК: "Вторник",
+  СРЯДА: "Сряда",
+  ЧЕТВЪРТЪК: "Четвъртък",
+  ПЕТЪК: "Петък",
 };
-
 
 export default function SchedulePage() {
   const { user, logout } = useAuth();

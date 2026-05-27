@@ -463,12 +463,12 @@ router.put("/grades/enrollment/:id", authenticate, async (req, res) => {
   const enrollmentId = parseInt(req.params.id as string);
   if (isNaN(enrollmentId)) return res.status(400).json({ error: "Invalid enrollment id" });
 
-  const { grade, status } = req.body as { grade?: number | null; status?: string };
+  const { grade } = req.body as { grade?: number | null };
 
   const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { academicStaffId: true } });
   if (!userRecord?.academicStaffId) return res.status(403).json({ error: "Academic staff record not found" });
 
-  const result = await setGrade(enrollmentId, userRecord.academicStaffId, grade ?? null, status);
+  const result = await setGrade(enrollmentId, userRecord.academicStaffId, grade ?? null);
   if ("error" in result) return res.status(result.status).json({ error: result.error });
   return res.json(result.data);
 });

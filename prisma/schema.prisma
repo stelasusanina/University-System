@@ -136,7 +136,6 @@ model Enrollment {
   courseId   Int
   semesterId Int
   grade      Float?
-  status     EnrollmentStatus @default(ЗАПИСАН)
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
 
@@ -293,19 +292,13 @@ enum SemesterPeriod {
   SUMMER
 }
 
-enum EnrollmentStatus {
-  ЗАПИСАН
-  ПОЛОЖЕН
-  НЕПОЛОЖЕН
-  ОТПИСАН
-}
 
 enum DayOfWeek {
-  MONDAY
-  TUESDAY
-  WEDNESDAY
-  THURSDAY
-  FRIDAY
+  ПОНЕДЕЛНИК
+  ВТОРНИК
+  СРЯДА
+  ЧЕТВЪРТЪК
+  ПЕТЪК
 }
 
 enum LessonType {

@@ -6,23 +6,12 @@ import type { CourseRow, EnrollmentRow, SemesterGrades } from "@shared/types/gra
 
 const STAFF_ROLES = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
 
-const ENROLLMENT_STATUSES = ["ЗАПИСАН", "ПОЛОЖЕН", "НЕПОЛОЖЕН", "ОТПИСАН"];
-
 function gradeColor(grade: number | null) {
   if (grade === null) return "";
   if (grade >= 5) return "grade-excellent";
   if (grade >= 4) return "grade-good";
   if (grade >= 3) return "grade-average";
   return "grade-fail";
-}
-
-function statusBadgeClass(status: string) {
-  switch (status) {
-    case "ПОЛОЖЕН": return "status-passed";
-    case "НЕПОЛОЖЕН": return "status-failed";
-    case "ОТПИСАН": return "status-withdrawn";
-    default: return "status-enrolled";
-  }
 }
 
 function StaffGradesView() {
@@ -33,7 +22,6 @@ function StaffGradesView() {
   const [loadingCourse, setLoadingCourse] = useState<number | null>(null);
   const [saving, setSaving] = useState<number | null>(null);
   const [editGrade, setEditGrade] = useState<Record<number, string>>({});
-  const [editStatus, setEditStatus] = useState<Record<number, string>>({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -53,13 +41,10 @@ function StaffGradesView() {
       const res = await api.get<{ enrollments: EnrollmentRow[] }>(`/grades/course/${courseId}`);
       setEnrollments((prev) => ({ ...prev, [courseId]: res.enrollments }));
       const gradeInit: Record<number, string> = {};
-      const statusInit: Record<number, string> = {};
       for (const e of res.enrollments) {
         gradeInit[e.id] = e.grade !== null ? String(e.grade) : "";
-        statusInit[e.id] = e.status;
       }
       setEditGrade((prev) => ({ ...prev, ...gradeInit }));
-      setEditStatus((prev) => ({ ...prev, ...statusInit }));
     } catch {
       setError("Неуспешно зареждане на записванията");
     } finally {
@@ -73,14 +58,13 @@ function StaffGradesView() {
     try {
       const gradeStr = editGrade[enrollmentId];
       const grade = gradeStr !== "" ? parseFloat(gradeStr) : null;
-      const status = editStatus[enrollmentId];
-      const updated = await api.put<EnrollmentRow>(`/grades/enrollment/${enrollmentId}`, { grade, status });
+      const updated = await api.put<EnrollmentRow>(`/grades/enrollment/${enrollmentId}`, { grade });
 
       // patch local state
       setEnrollments((prev) => {
         const next = { ...prev };
         for (const [cid, list] of Object.entries(next)) {
-          next[Number(cid)] = list.map((e) => e.id === enrollmentId ? { ...e, grade: updated.grade, status: updated.status } : e);
+          next[Number(cid)] = list.map((e) => e.id === enrollmentId ? { ...e, grade: updated.grade } : e);
         }
         return next;
       });
@@ -143,7 +127,6 @@ function StaffGradesView() {
                         <th>Име</th>
                         <th>Курс</th>
                         <th>Оценка</th>
-                        <th>Статус</th>
                         <th></th>
                       </tr>
                     </thead>
@@ -151,7 +134,7 @@ function StaffGradesView() {
                       {sortedGroups.map((group) => (
                         <>
                           <tr key={`group-${group}`} className="grades-group-header-row">
-                            <td colSpan={6}>Група {group}</td>
+                            <td colSpan={5}>Група {group}</td>
                           </tr>
                           {byGroup.get(group)!.map((e) => (
                             <tr key={e.id}>
@@ -171,19 +154,6 @@ function StaffGradesView() {
                                     setEditGrade((prev) => ({ ...prev, [e.id]: ev.target.value }))
                                   }
                                 />
-                              </td>
-                              <td>
-                                <select
-                                  className="grade-status-select"
-                                  value={editStatus[e.id] ?? e.status}
-                                  onChange={(ev) =>
-                                    setEditStatus((prev) => ({ ...prev, [e.id]: ev.target.value }))
-                                  }
-                                >
-                                  {ENROLLMENT_STATUSES.map((s) => (
-                                    <option key={s} value={s}>{s}</option>
-                                  ))}
-                                </select>
                               </td>
                               <td>
                                 <button
@@ -255,7 +225,6 @@ function StudentGradesView() {
                   <th>Credits</th>
                   <th>Lecturer</th>
                   <th>Grade</th>
-                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -268,11 +237,6 @@ function StudentGradesView() {
                     <td>
                       <span className={`grade-value ${gradeColor(e.grade)}`}>
                         {e.grade !== null ? e.grade : "—"}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`enrollment-status-badge ${statusBadgeClass(e.status)}`}>
-                        {e.status}
                       </span>
                     </td>
                   </tr>

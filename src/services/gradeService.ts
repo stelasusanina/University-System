@@ -23,7 +23,6 @@ export async function getEnrollmentsForCourse(
     select: {
       id: true,
       grade: true,
-      status: true,
       student: {
         select: {
           id: true,
@@ -81,7 +80,6 @@ export async function setGrade(
   enrollmentId: number,
   academicStaffId: number,
   grade: number | null,
-  status: string | undefined,
 ): Promise<{ error: string; status: number } | { data: unknown }> {
   const enrollment = await prisma.enrollment.findUnique({
     where: { id: enrollmentId },
@@ -99,12 +97,10 @@ export async function setGrade(
     where: { id: enrollmentId },
     data: {
       grade: grade ?? null,
-      ...(status ? { status: status as "ЗАПИСАН" | "ПОЛОЖЕН" | "НЕПОЛОЖЕН" | "ОТПИСАН" } : {}),
     },
     select: {
       id: true,
       grade: true,
-      status: true,
       student: { select: { firstName: true, lastName: true, facultyNumber: true } },
     },
   });
@@ -122,7 +118,6 @@ export async function getMyGrades(
     select: {
       id: true,
       grade: true,
-      status: true,
       course: {
         select: {
           id: true,

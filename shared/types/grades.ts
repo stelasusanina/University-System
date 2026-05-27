@@ -10,7 +10,6 @@ export interface CourseRow {
 export interface EnrollmentRow {
   id: number;
   grade: number | null;
-  status: string;
   student: {
     id: number;
     facultyNumber: string;
@@ -26,7 +25,6 @@ export interface SemesterGrades {
   enrollments: {
     id: number;
     grade: number | null;
-    status: string;
     course: {
       id: number;
       code: string;
