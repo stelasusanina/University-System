@@ -15,7 +15,7 @@ export async function getEventsForUser(userId: number): Promise<{ error: string;
 
   const currentSemester = await prisma.semester.findFirst({
     where: { isCurrent: true },
-    orderBy: [{ year: "desc" }, { startDate: "desc" }],
+    orderBy: [{ startDate: "desc" }],
     select: { id: true },
   });
 
@@ -105,7 +105,7 @@ export async function createEvent(
 
   const currentSemester = await prisma.semester.findFirst({
     where: { isCurrent: true },
-    orderBy: [{ year: "desc" }, { startDate: "desc" }],
+    orderBy: [{ startDate: "desc" }],
     select: { id: true },
   });
 

@@ -14,10 +14,10 @@ function signToken(user: { id: number; email: string; role: string }) {
   );
 }
 
-export async function loginUser(email: string, password: string): Promise<{ error: string; status: number } | { token: string; user: { id: number; email: string; role: string } }> {
+export async function loginUser(email: string, password: string): Promise<{ error: string; status: number } | { token: string; user: { id: number; email: string; role: string; firstName: string; lastName: string } }> {
   const user = await prisma.user.findUnique({
     where: { email },
-    select: { id: true, email: true, role: true, password: true },
+    select: { id: true, email: true, role: true, password: true, student: { select: { firstName: true, lastName: true } }, academicStaff: { select: { firstName: true, lastName: true } } },
   });
 
   if (!user) {
@@ -30,8 +30,9 @@ export async function loginUser(email: string, password: string): Promise<{ erro
     return { error: "Invalid email or password", status: 401 };
   }
 
+  const person = (user.student ?? user.academicStaff)!;
   const token = signToken(user);
-  return { token, user: { id: user.id, email: user.email, role: user.role } };
+  return { token, user: { id: user.id, email: user.email, role: user.role, firstName: person.firstName, lastName: person.lastName } };
 }
 
 export async function registerUser(
@@ -40,7 +41,7 @@ export async function registerUser(
   firstName: string,
   lastName: string,
   password: string,
-): Promise<{ error: string; status: number } | { token: string; user: { id: number; email: string; role: string }; status: number }> {
+): Promise<{ error: string; status: number } | { token: string; user: { id: number; email: string; role: string; firstName: string; lastName: string }; status: number }> {
   const student = await prisma.student.findUnique({
     where: { facultyNumber: identifierNumber },
     select: { id: true, firstName: true, lastName: true },
@@ -91,5 +92,5 @@ export async function registerUser(
   });
 
   const token = signToken(user);
-  return { token, user: { id: user.id, email: user.email, role: user.role }, status: 201 };
+  return { token, user: { id: user.id, email: user.email, role: user.role, firstName, lastName }, status: 201 };
 }

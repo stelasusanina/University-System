@@ -116,7 +116,6 @@ model Course {
 model Semester {
   id        Int          @id @default(autoincrement())
   name      String       @db.VarChar(50)
-  year      Int
   period    SemesterPeriod
   startDate DateTime
   endDate   DateTime

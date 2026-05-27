@@ -100,8 +100,8 @@ export async function getMaterialsForCourse(courseId: number) {
 export async function getCoursesWithMaterialsForStudent(studentId: number) {
   const currentSemester = await prisma.semester.findFirst({
     where: { isCurrent: true },
-    orderBy: [{ year: "desc" }, { startDate: "desc" }],
-    select: { id: true, name: true, year: true, period: true },
+    orderBy: [{ startDate: "desc" }],
+    select: { id: true, name: true, period: true },
   });
 
   if (!currentSemester) return null;

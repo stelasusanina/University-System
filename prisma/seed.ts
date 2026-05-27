@@ -133,7 +133,6 @@ try {
     update: { isCurrent: true },
     create: {
       name: "Зимен семестър 2025/2026",
-      year: 2025,
       period: "WINTER",
       startDate: new Date("2025-10-01"),
       endDate: new Date("2026-01-31"),

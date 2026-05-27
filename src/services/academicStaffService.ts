@@ -22,8 +22,8 @@ export async function getAcademicStaffProgram(userId: number): Promise<{ error: 
 
   const currentSemester = await prisma.semester.findFirst({
     where: { isCurrent: true },
-    orderBy: [{ year: "desc" }, { startDate: "desc" }],
-    select: { id: true, name: true, year: true, period: true },
+    orderBy: [{ startDate: "desc" }],
+    select: { id: true, name: true, period: true },
   });
 
   if (!currentSemester) return { error: "No active semester found", status: 404 };

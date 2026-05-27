@@ -12,7 +12,7 @@ export async function getEnrollmentsForCourse(
 
   const currentSemester = await prisma.semester.findFirst({
     where: { isCurrent: true },
-    orderBy: [{ year: "desc" }, { startDate: "desc" }],
+    orderBy: [{ startDate: "desc" }],
     select: { id: true, name: true },
   });
   if (!currentSemester) return { error: "No active semester found", status: 404 };
@@ -51,7 +51,7 @@ export async function getCoursesWithEnrollments(
 ): Promise<{ error: string; status: number } | { data: unknown }> {
   const currentSemester = await prisma.semester.findFirst({
     where: { isCurrent: true },
-    orderBy: [{ year: "desc" }, { startDate: "desc" }],
+    orderBy: [{ startDate: "desc" }],
     select: { id: true, name: true },
   });
   if (!currentSemester) return { error: "No active semester found", status: 404 };
@@ -114,7 +114,7 @@ export async function getMyGrades(
 ): Promise<{ error: string; status: number } | { data: unknown }> {
   const enrollments = await prisma.enrollment.findMany({
     where: { studentId },
-    orderBy: [{ semester: { year: "desc" } }, { semester: { period: "asc" } }, { course: { name: "asc" } }],
+    orderBy: [{ semester: { startDate: "desc" } }, { semester: { period: "asc" } }, { course: { name: "asc" } }],
     select: {
       id: true,
       grade: true,
@@ -129,7 +129,7 @@ export async function getMyGrades(
           academicStaff: { select: { firstName: true, lastName: true, title: true } },
         },
       },
-      semester: { select: { id: true, name: true, year: true, period: true } },
+      semester: { select: { id: true, name: true, period: true } },
     },
   });
 

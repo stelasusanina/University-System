@@ -21,7 +21,7 @@ export interface EnrollmentRow {
 }
 
 export interface SemesterGrades {
-  semester: { id: number; name: string; year: number; period: string };
+  semester: { id: number; name: string; period: string };
   enrollments: {
     id: number;
     grade: number | null;

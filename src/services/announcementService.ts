@@ -15,7 +15,7 @@ export async function createAnnouncement(
 
   const currentSemester = await prisma.semester.findFirst({
     where: { isCurrent: true },
-    orderBy: [{ year: "desc" }, { startDate: "desc" }],
+    orderBy: [{ startDate: "desc" }],
     select: { id: true },
   });
 
