@@ -103,6 +103,13 @@ export async function createEvent(
     return { error: "Only academic staff can create events", status: 403 };
   }
 
+  const eventDate = new Date(body.date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (eventDate < today) {
+    return { error: "Не може да се създаде събитие за минала дата!", status: 400 };
+  }
+
   const currentSemester = await prisma.semester.findFirst({
     where: { isCurrent: true },
     orderBy: [{ startDate: "desc" }],
