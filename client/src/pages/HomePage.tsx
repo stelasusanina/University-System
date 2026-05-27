@@ -53,7 +53,6 @@ export default function HomePage() {
 
   const isStaff = user?.role && STAFF_ROLES.includes(user.role);
 
-  // Add event modal state
   const [showAddModal, setShowAddModal] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
@@ -217,7 +216,7 @@ export default function HomePage() {
       <Navbar />
 
       <main className="home-main">
-        <h1>Добре дошли, {user?.email}</h1>
+        <h1 className="home-welcome">Добре дошли, {user?.firstName} {user?.lastName}</h1>
         <div className="home-grid">
           <section className="calendar-card home-calendar-card">
             <div className="calendar-card-header">

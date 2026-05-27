@@ -16,39 +16,46 @@
 
 .timetable-wrapper {
   overflow-x: auto;
-  margin-top: 1rem;
+  margin-top: 0.75rem;
 }
 
 .timetable-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  min-width: 880px;
+  min-width: 760px;
+  table-layout: fixed;
+  font-size: 0.85rem;
 }
 
 .timetable-table th,
 .timetable-table td {
   border: 1px solid #e5e7eb;
   vertical-align: top;
+  overflow: hidden;
 }
 
 .timetable-table th {
   background: #eff6ff;
   color: #1e3a8a;
   font-weight: 700;
-  padding: 0.9rem;
+  padding: 0.55rem 0.65rem;
   text-align: left;
+  font-size: 0.82rem;
+}
+
+.timetable-table th:first-child {
+  width: 4%;
 }
 
 .timetable-table td {
   background: #ffffff;
-  padding: 0.75rem;
-  width: 20px;
+  padding: 0.5rem;
 }
 
 .time-cell {
   background: #f8fafc !important;
-  width: 10%;
+  white-space: nowrap;
 }
 
 .time-cell strong,
@@ -58,18 +65,21 @@
 
 .time-cell span {
   color: #64748b;
-  margin-top: 0.2rem;
+  margin-top: 0.15rem;
+  font-size: 0.8rem;
 }
 
 .timetable-entry {
   background: #f8fbff;
-  border-radius: 8px;
-  padding: 0.75rem;
-  min-height: 120px;
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .timetable-course-code {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -78,24 +88,15 @@
 
 .timetable-course-name {
   font-weight: 700;
-  margin: 0.25rem 0 0.5rem;
+  font-size: 0.83rem;
+  margin: 0.15rem 0 0.35rem;
   color: #0f172a;
 }
 
 .timetable-meta {
   color: #475569;
-  font-size: 0.9rem;
-  margin-top: 0.2rem;
-}
-
-.timetable-empty {
-  min-height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #94a3b8;
-  background: #f8fafc;
-  border-radius: 8px;
+  font-size: 0.78rem;
+  margin-top: 0.15rem;
 }
 
 .room-link-button {

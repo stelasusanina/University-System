@@ -30,7 +30,7 @@
 }
 
 .nav-logo {
-  height: 28px;
+  height: 70px;
   width: auto;
 }
 
@@ -82,7 +82,7 @@
 
 .home-main {
   padding: 2rem;
-  padding-top: calc(56px + 2rem);
+  padding-top: calc(56px + 0.5rem);
 }
 
 .home-grid {

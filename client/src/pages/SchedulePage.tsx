@@ -169,7 +169,7 @@ export default function SchedulePage() {
                                         )}
                                       </div>
                                     ) : (
-                                      <div className="timetable-empty">-</div>
+                                      <div className="timetable-empty"></div>
                                     )}
                                   </td>
                                 );

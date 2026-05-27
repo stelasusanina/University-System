@@ -82,22 +82,27 @@
 
 button[type="submit"] {
   width: 100%;
-  padding: 0.75rem;
-  background: #2563eb;
+  padding: 0.65rem;
+  background: #3b82f6;
   color: white;
   border: none;
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+  transition: background 0.15s, box-shadow 0.15s;
 }
 
 button[type="submit"]:hover {
-  background: #1d4ed8;
+  background: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
 }
 
 button[type="submit"]:disabled {
   background: #93c5fd;
+  box-shadow: none;
   cursor: not-allowed;
 }
 
@@ -126,4 +131,8 @@ button[type="submit"]:disabled {
   text-align: center;
   margin-top: 0.75rem;
   font-size: 0.85rem;
+}
+
+.home-welcome {
+  font-size: 2rem;
 }
