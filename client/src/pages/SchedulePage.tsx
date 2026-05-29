@@ -63,10 +63,6 @@ export default function SchedulePage() {
         type: schedule.type,
         courseCode: course.code,
         courseName: course.name,
-        lecturerName:
-          "lecturer" in course
-            ? `${course.lecturer.title} ${course.lecturer.firstName} ${course.lecturer.lastName}`
-            : null,
         building: "building" in schedule ? (schedule.building as BuildingInfo | null) : null,
       })),
     ) ?? [];
@@ -150,22 +146,23 @@ export default function SchedulePage() {
                                   <td key={`${slot}-${day}`}>
                                     {entry ? (
                                       <div className="timetable-entry">
-                                        <div className="timetable-course-code">{entry.courseCode}</div>
+                                        <div className="timetable-course-code">{entry.courseCode} | {entry.type.replaceAll("_", " ")}</div>
                                         <div className="timetable-course-name">{entry.courseName}</div>
-                                        <div className="timetable-meta">{entry.type}</div>
                                         {entry.building ? (
                                           <button
                                             type="button"
                                             className="room-link-button"
                                             onClick={() => handleRoomClick(entry)}
                                           >
+                                            <img
+                                              src="https://img.icons8.com/?size=100&id=3723&format=png&color=000000"
+                                              alt="Location icon"
+                                              className="room-link-icon"
+                                            />
                                             Зала {entry.room}
                                           </button>
                                         ) : (
                                           <div className="timetable-meta">Зала {entry.room}</div>
-                                        )}
-                                        {entry.lecturerName && (
-                                          <div className="timetable-meta">{entry.lecturerName}</div>
                                         )}
                                       </div>
                                     ) : (

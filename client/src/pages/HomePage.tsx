@@ -272,7 +272,7 @@ export default function HomePage() {
               announcements.map((a) => (
                 <div key={a.id} className={`announcement-item announcement-${ANNOUNCEMENT_CSS[a.type] ?? a.type.toLowerCase()}`}>
                   <div className="announcement-header">
-                    <span className={`announcement-badge announcement-badge-${ANNOUNCEMENT_CSS[a.type] ?? a.type.toLowerCase()}`}>{a.type.replace("_", " ")}</span>
+                    <span className={`announcement-badge announcement-badge-${ANNOUNCEMENT_CSS[a.type] ?? a.type.toLowerCase()}`}>{a.type.replaceAll("_", " ")}</span>
                     <span className="announcement-time">{dayjs(a.createdAt).format("D MMM, HH:mm")}</span>
                   </div>
                   <p className="announcement-message">{a.message}</p>
@@ -305,7 +305,7 @@ export default function HomePage() {
                   <label>Вид</label>
                   <select value={formType} onChange={(e) => setFormType(e.target.value)}>
                     {EVENT_TYPES.map((t) => (
-                      <option key={t} value={t}>{t.replace("_", " ")}</option>
+                      <option key={t} value={t}>{t.replaceAll("_", " ")}</option>
                     ))}
                   </select>
                 </div>

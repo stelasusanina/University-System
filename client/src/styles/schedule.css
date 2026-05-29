@@ -48,9 +48,13 @@
   width: 4%;
 }
 
+.timetable-table td:first-child {
+  padding: 0.5rem;
+}
+
 .timetable-table td {
   background: #ffffff;
-  padding: 0.5rem;
+  padding: 0.2rem;
 }
 
 .time-cell {
@@ -72,14 +76,14 @@
 .timetable-entry {
   background: #f8fbff;
   border-radius: 6px;
-  padding: 0.5rem 0.6rem;
+  padding: 0.2rem 0.5rem;
   height: 100%;
   box-sizing: border-box;
   overflow: hidden;
 }
 
 .timetable-course-code {
-  font-size: 0.72rem;
+  font-size: 0.52rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -88,7 +92,7 @@
 
 .timetable-course-name {
   font-weight: 700;
-  font-size: 0.83rem;
+  font-size: 0.75rem;
   margin: 0.15rem 0 0.35rem;
   color: #0f172a;
 }
@@ -100,15 +104,24 @@
 }
 
 .room-link-button {
-  margin-top: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
   padding: 0;
   background: none;
   border: none;
   color: #1d4ed8;
   font: inherit;
+  font-size: 0.75rem;
   font-weight: 600;
   text-align: left;
   cursor: pointer;
+}
+
+.room-link-icon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
 }
 
 .room-link-button:hover {

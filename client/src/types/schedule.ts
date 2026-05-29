@@ -87,6 +87,5 @@ export type TimetableEntry = {
   type: string;
   courseCode: string;
   courseName: string;
-  lecturerName: string | null;
   building: BuildingInfo | null;
 };
