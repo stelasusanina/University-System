@@ -258,10 +258,10 @@ export default function ManageAnnouncementsPage() {
                 <div className="announcement-meta">
                   {a.specialty && <span>{a.specialty.name}, Курс {a.year}{a.group ? `, Група ${a.group}` : ""}</span>}
                   {a.course && <span> · {a.course.name}</span>}
-                  <span className="announcement-valid-to">Валидно до {dayjs(a.validTo).format("D MMM, HH:mm")}</span>
+                  <span className="announcement-valid-to">Валидно до {dayjs(a.validTo).format("D.M.YYYY, HH:mm")}</span>
                 </div>
                 <div className="announcement-actions">
-                  <button type="button" className="btn-icon" onClick={() => startEdit(a)} title="Edit">✏️</button>
+                  <button type="button" className="btn-edit materials" onClick={() => startEdit(a)}>Редактирай</button>
                   <button type="button" className="btn-delete" onClick={() => handleDelete(a.id)}>Изтрий</button>
                 </div>
               </div>

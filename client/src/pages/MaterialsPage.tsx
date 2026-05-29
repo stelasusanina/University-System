@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
 import Navbar from "../components/Navbar";
@@ -11,7 +12,6 @@ interface MaterialItem {
   fileType: string;
   uploadedAt: string;
   course?: { id: number; code: string; name: string };
-  academicStaff?: { firstName: string; lastName: string; title: string };
 }
 
 interface CourseWithMaterials {
@@ -32,8 +32,6 @@ interface StaffCourse {
   year: number;
   semester: number;
 }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const STAFF_ROLES = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
 
@@ -57,7 +55,10 @@ function formatDate(iso: string) {
   });
 }
 
-// ── Staff view ────────────────────────────────────────────────────────────────
+function previewUrl(url: string): string {
+  return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
+}
+
 
 function StaffMaterialsView() {
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
@@ -66,7 +67,6 @@ function StaffMaterialsView() {
   const [error, setError] = useState("");
   const [openCourse, setOpenCourse] = useState<number | null>(null);
 
-  // Upload form
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -275,12 +275,19 @@ function StaffMaterialsView() {
                             </div>
                             <div className="material-actions">
                               <a
-                                href={m.fileUrl}
+                                href={previewUrl(m.fileUrl)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="btn-secondary"
                               >
-                                Преглед / Изтегляне
+                                Преглед
+                              </a>
+                              <a
+                                href={m.fileUrl}
+                                download
+                                className="btn-primary"
+                              >
+                                Изтегляне
                               </a>
                               <button
                                 type="button"
@@ -306,17 +313,34 @@ function StaffMaterialsView() {
 }
 
 function StudentMaterialsView() {
-  const [data, setData] = useState<{ semester: { name: string }; courses: CourseWithMaterials[] } | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [courses, setCourses] = useState<CourseWithMaterials[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [openCourse, setOpenCourse] = useState<number | null>(null);
 
+  const semParam = searchParams.get("semester");
+  const filterSemester: number | "" = semParam ? Number(semParam) : "";
+
+  function setFilterSemester(value: number | "") {
+    if (value) {
+      setSearchParams({ semester: String(value) });
+    } else {
+      setSearchParams({});
+    }
+  }
+
   useEffect(() => {
-    api.get<{ semester: { name: string }; courses: CourseWithMaterials[] }>("/materials/courses")
-      .then(setData)
+    api.get<{ courses: CourseWithMaterials[] }>("/materials/courses")
+      .then((data) => setCourses(data.courses))
       .catch(() => setError("Неуспешно зареждане на материали"))
       .finally(() => setLoading(false));
   }, []);
+
+  const filteredCourses = courses.filter((c) => {
+    if (filterSemester && c.semester !== filterSemester) return false;
+    return true;
+  });
 
   return (
     <div className="materials-section">
@@ -325,14 +349,36 @@ function StudentMaterialsView() {
       {error && <div className="error-message">{error}</div>}
       {loading && <p className="loading-text">Зареждане…</p>}
 
-      {!loading && data && (
-        <>
-          <p className="semester-label">{data.semester.name}</p>
-          {data.courses.length === 0 && (
-            <p className="empty-text">Няма записани дисциплини за този семестър.</p>
-          )}
-          <div className="course-accordion">
-            {data.courses.map((course) => (
+      {!loading && courses.length > 0 && (
+        <div className="materials-layout">
+          <aside className="materials-sidebar">
+            <label className="materials-sidebar-label">Филтрирай по семестър:</label>
+            <label className="semester-checkbox">
+              <input
+                type="checkbox"
+                checked={filterSemester === ""}
+                onChange={() => setFilterSemester("")}
+              />
+              Всички
+            </label>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+              <label key={s} className="semester-checkbox">
+                <input
+                  type="checkbox"
+                  checked={filterSemester === s}
+                  onChange={() => setFilterSemester(filterSemester === s ? "" : s)}
+                />
+              {s}
+              </label>
+            ))}
+          </aside>
+
+          <div className="materials-content">
+            {filteredCourses.length === 0 && (
+              <p className="empty-text">Няма материали за избраните филтри.</p>
+            )}
+            <div className="course-accordion">
+              {filteredCourses.map((course) => (
               <div key={course.id} className="accordion-item">
                 <button
                   type="button"
@@ -343,6 +389,7 @@ function StudentMaterialsView() {
                 >
                   <span className="accordion-course-code">{course.code}</span>
                   <span className="accordion-course-name">{course.name}</span>
+                  <span className="accordion-meta">курс {course.year} · сем. {course.semester}</span>
                   <span className="accordion-count">
                     {course.materials.length} файл{course.materials.length !== 1 ? "а" : ""}
                   </span>
@@ -353,11 +400,6 @@ function StudentMaterialsView() {
 
                 {openCourse === course.id && (
                   <div className="accordion-body">
-                    <div className="accordion-staff">
-                      {course.academicStaff.title} {course.academicStaff.firstName}{" "}
-                      {course.academicStaff.lastName}
-                    </div>
-
                     {course.materials.length === 0 ? (
                       <p className="empty-text">Все още няма качени материали за тази дисциплина.</p>
                     ) : (
@@ -365,9 +407,6 @@ function StudentMaterialsView() {
                         {course.materials.map((m) => (
                           <div key={m.id} className="material-card">
                             <div className="material-card-main">
-                              <span className={`file-type-badge ${fileTypeBadgeClass(m.fileType)}`}>
-                                {fileTypeLabel(m.fileType)}
-                              </span>
                               <div className="material-info">
                                 <div className="material-title">{m.title}</div>
                                 {m.description && (
@@ -380,12 +419,19 @@ function StudentMaterialsView() {
                             </div>
                             <div className="material-actions">
                               <a
-                                href={m.fileUrl}
+                                href={previewUrl(m.fileUrl)}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="btn-primary"
+                                className="btn-secondary"
                               >
-                                Преглед / Изтегляне
+                                Преглед
+                              </a>
+                              <a
+                                href={m.fileUrl}
+                                download
+                                className="btn-secondary"
+                              >
+                                Изтегляне
                               </a>
                             </div>
                           </div>
@@ -397,7 +443,12 @@ function StudentMaterialsView() {
               </div>
             ))}
           </div>
-        </>
+          </div>
+        </div>
+      )}
+
+      {!loading && courses.length === 0 && (
+        <p className="empty-text">Няма налични дисциплини за вашата специалност.</p>
       )}
     </div>
   );

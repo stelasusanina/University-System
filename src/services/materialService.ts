@@ -96,47 +96,39 @@ export async function getMaterialsForCourse(courseId: number) {
   });
 }
 
-// Student: list their enrolled courses (current semester) with materials for each
+// Student: list all courses with materials for the student's specialty (all semesters/years)
 export async function getCoursesWithMaterialsForStudent(studentId: number) {
-  const currentSemester = await prisma.semester.findFirst({
-    where: { isCurrent: true },
-    orderBy: [{ startDate: "desc" }],
-    select: { id: true, name: true, period: true },
+  const student = await prisma.student.findUnique({
+    where: { id: studentId },
+    select: { specialtyId: true },
   });
 
-  if (!currentSemester) return null;
+  if (!student) return null;
 
-  const enrollments = await prisma.enrollment.findMany({
-    where: { studentId, semesterId: currentSemester.id },
+  const courses = await prisma.course.findMany({
+    where: { specialtyId: student.specialtyId },
+    orderBy: [{ year: "asc" }, { semester: "asc" }, { name: "asc" }],
     select: {
-      course: {
+      id: true,
+      code: true,
+      name: true,
+      year: true,
+      semester: true,
+      type: true,
+      academicStaff: { select: { firstName: true, lastName: true, title: true } },
+      materials: {
+        orderBy: { uploadedAt: "desc" },
         select: {
           id: true,
-          code: true,
-          name: true,
-          year: true,
-          semester: true,
-          type: true,
-          academicStaff: { select: { firstName: true, lastName: true, title: true } },
-          materials: {
-            orderBy: { uploadedAt: "desc" },
-            select: {
-              id: true,
-              title: true,
-              description: true,
-              fileUrl: true,
-              fileType: true,
-              uploadedAt: true,
-            },
-          },
+          title: true,
+          description: true,
+          fileUrl: true,
+          fileType: true,
+          uploadedAt: true,
         },
       },
     },
-    orderBy: [{ courseId: "asc" }],
   });
 
-  return {
-    semester: currentSemester,
-    courses: enrollments.map(({ course }) => course),
-  };
+  return { courses };
 }

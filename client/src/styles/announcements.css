@@ -3,6 +3,7 @@
   border-radius: 12px;
   padding: 1.25rem;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e2e8f0;
 }
 
 .announcements-card h2 {
@@ -13,17 +14,15 @@
 
 .announcement-item {
   padding: 0.85rem 1rem;
-  border-left: 3px solid #94a3b8;
   border-radius: 6px;
   background: #f8fafc;
   margin-bottom: 0.75rem;
 }
 
-.announcement-item.announcement-delay       { border-left-color: #f59e0b; background: #fffbeb; }
-.announcement-item.announcement-cancellation,
-.announcement-item.announcement-urgent      { border-left-color: #ef4444; background: #fef2f2; }
-.announcement-item.announcement-room_change { border-left-color: #3b82f6; background: #eff6ff; }
-.announcement-item.announcement-info        { border-left-color: #6366f1; background: #eef2ff; }
+.announcement-item {
+  background: #eff6ff;
+  border: 1px solid #e2e8f0;
+}
 
 .announcement-header {
   display: flex;

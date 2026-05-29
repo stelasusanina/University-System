@@ -413,7 +413,7 @@ router.get("/materials/courses", authenticate, async (req, res) => {
   const result = await getCoursesWithMaterialsForStudent(userRecord.studentId);
 
   if (!result) {
-    return res.status(404).json({ error: "No active semester found" });
+    return res.status(404).json({ error: "Student not found" });
   }
 
   return res.json(result);

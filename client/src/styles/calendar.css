@@ -11,8 +11,8 @@
 }
 
 .home-calendar-card {
-  margin-top: 1rem;
   max-width: 360px;
+  border: 1px solid #e2e8f0;
 }
 
 .calendar-date-label {
