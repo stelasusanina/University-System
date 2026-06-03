@@ -2,31 +2,7 @@ import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { api } from "../services/api";
 import Navbar from "../components/Navbar";
-
-interface Course {
-  id: number;
-  code: string;
-  name: string;
-  specialtyId: number;
-}
-
-interface Specialty {
-  id: number;
-  name: string;
-  years: number;
-}
-
-interface Announcement {
-  id: number;
-  message: string;
-  type: string;
-  validTo: string;
-  createdAt: string;
-  course?: { code: string; name: string } | null;
-  specialty?: { name: string };
-  year: number;
-  group: number | null;
-}
+import type { Announcement, Course, Specialty } from "@shared/types/announcements";
 
 const ANNOUNCEMENT_TYPES = ["ИНФОРМАЦИЯ", "ЗАКЪСНЕНИЕ", "ОТМЯНА", "СМЯНА_НА_ЗАЛА", "СПЕШНО"];
 
@@ -97,7 +73,7 @@ export default function ManageAnnouncementsPage() {
     setValidTo(dayjs(a.validTo).format("YYYY-MM-DDTHH:mm"));
     const spec = specialties.find((s) => s.name === a.specialty?.name);
     setSpecialtyId(spec?.id ?? "");
-    setYear(a.year);
+    setYear(a.year ?? "");
     setGroup(a.group ?? "");
     const course = a.course ? courses.find((c) => c.name === a.course!.name) : null;
     setCourseId(course?.id ?? "");

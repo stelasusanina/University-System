@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "825431914289",
+    "project_id": "university-system-c7a05",
+    "storage_bucket": "university-system-c7a05.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:825431914289:android:f489301a01f59a6d0de210",
+        "android_client_info": {
+          "package_name": "com.university.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiFTZouqcJ2CbKhuIARxe6Xai4cy6904A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -6,32 +6,9 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { PickerDay, type PickerDayProps } from "@mui/x-date-pickers/PickerDay";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
-import type { EventItem, EventsResponse } from "../types/events";
+import type { EventItem, EventsResponse } from "@shared/types/events";
+import type { Announcement, Course, Specialty } from "@shared/types/announcements";
 import Navbar from "../components/Navbar";
-
-interface Announcement {
-  id: number;
-  message: string;
-  type: string;
-  validTo: string;
-  createdAt: string;
-  course?: { code: string; name: string } | null;
-  academicStaff?: { firstName: string; lastName: string; title: string };
-  specialty?: { name: string };
-}
-
-interface Course {
-  id: number;
-  code: string;
-  name: string;
-  specialtyId: number;
-}
-
-interface Specialty {
-  id: number;
-  name: string;
-  years: number;
-}
 
 const EVENT_TYPES = ["КОНТРОЛНА", "ИЗПИТ", "ЗАДАНИЕ", "ЗАЩИТА_НА_ПРОЕКТ", "ДРУГО"];
 

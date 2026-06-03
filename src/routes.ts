@@ -8,6 +8,7 @@ import { getEventsForUser, createEvent, deleteEvent } from "./services/eventServ
 import { createAnnouncement, getAnnouncementsForUser, updateAnnouncement, deleteAnnouncement, getStaffFormOptions } from "./services/announcementService.ts";
 import { uploadMaterial, getMaterialsForCourse, getMaterialsByStaff, deleteMaterial, getCoursesWithMaterialsForStudent, getCoursesForStaff } from "./services/materialService.ts";
 import { getEnrollmentsForCourse, getCoursesWithEnrollments, setGrade, getMyGrades } from "./services/gradeService.ts";
+import { registerPushToken, removePushToken, getTargetedPushTokens, sendPushNotifications } from "./services/pushService.ts";
 import { upload } from "./utils/upload.ts";
 import { prisma } from "./prisma.ts";
 import type { Request } from "express";
@@ -167,6 +168,16 @@ router.post("/announcements", authenticate, async (req, res) => {
   if ("error" in result) {
     return res.status(result.status).json({ error: result.error });
   }
+
+  // Send push notifications to targeted students (fire-and-forget)
+  getTargetedPushTokens(specialtyId, year, group ?? null)
+    .then((tokens) => {
+      if (tokens.length > 0) {
+        const title = type ? type.replaceAll("_", " ") : "Ново съобщение";
+        sendPushNotifications(tokens, title, message);
+      }
+    })
+    .catch((err) => console.error("Push notification error:", err));
 
   return res.status(result.status).json(result.data);
 });
@@ -417,6 +428,31 @@ router.get("/materials/courses", authenticate, async (req, res) => {
   }
 
   return res.json(result);
+});
+
+// ── Push Tokens ───────────────────────────────────────────────────────────────
+
+router.post("/push-token", authenticate, async (req, res) => {
+  const { userId } = (req as AuthenticatedRequest).user;
+  const { token } = req.body;
+
+  if (!token || typeof token !== "string") {
+    return res.status(400).json({ error: "token is required" });
+  }
+
+  await registerPushToken(userId!, token);
+  return res.json({ success: true });
+});
+
+router.delete("/push-token", authenticate, async (req, res) => {
+  const { token } = req.body;
+
+  if (!token || typeof token !== "string") {
+    return res.status(400).json({ error: "token is required" });
+  }
+
+  await removePushToken(token);
+  return res.json({ success: true });
 });
 
 // ── Grades ────────────────────────────────────────────────────────────────────
