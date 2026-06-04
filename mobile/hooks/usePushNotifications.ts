@@ -22,6 +22,7 @@ export function useRegisterPushNotifications() {
   useEffect(() => {
     registerForPushNotifications().then((token) => {
       if (token) {
+        console.log("ExpoPushToken:", token);
         tokenRef.current = token;
         api.post("/push-token", { token }).catch(() => {});
       }
