@@ -24,8 +24,12 @@ export async function getStudentProgram(userId: number): Promise<{ error: string
     },
   });
 
-  if (!user) return { error: "User not found", status: 404 };
-  if (!user.student) return { error: "Program view is available only for student accounts", status: 403 };
+  if (!user) {
+    return { error: "User not found", status: 404 };
+  }
+  if (!user.student) {
+    return { error: "Program view is available only for student accounts", status: 403 };
+  }
 
   const currentSemester = await prisma.semester.findFirst({
     where: { isCurrent: true },
@@ -33,7 +37,9 @@ export async function getStudentProgram(userId: number): Promise<{ error: string
     select: { id: true, name: true, period: true },
   });
 
-  if (!currentSemester) return { error: "No active semester found", status: 404 };
+  if (!currentSemester) {
+    return { error: "No active semester found", status: 404 };
+  }
 
   const buildings = await prisma.building.findMany({
     select: { number: true, name: true, address: true, latitude: true, longitude: true, googleMapsUrl: true },

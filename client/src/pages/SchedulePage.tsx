@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.tsx";
 import { api } from "../services/api.ts";
-import type { BuildingInfo } from "../types/building";
+import type { Building } from "@shared/types/schedule";
 import Navbar from "../components/Navbar";
 import type { ProgramResponse, TimetableEntry } from "../types/schedule";
 
@@ -63,7 +63,7 @@ export default function SchedulePage() {
         type: schedule.type,
         courseCode: course.code,
         courseName: course.name,
-        building: "building" in schedule ? (schedule.building as BuildingInfo | null) : null,
+        building: "building" in schedule ? (schedule.building as Building | null) : null,
       })),
     ) ?? [];
 

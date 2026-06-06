@@ -69,7 +69,9 @@ export async function deleteMaterial(
   academicStaffId: number,
 ): Promise<{ error: string; status: number } | { success: true }> {
   const material = await prisma.material.findUnique({ where: { id: materialId } });
-  if (!material) return { error: "Material not found", status: 404 };
+  if (!material) {
+    return { error: "Material not found", status: 404 };
+  }
   if (material.academicStaffId !== academicStaffId)
     return { error: "You can only delete your own materials", status: 403 };
 
@@ -103,7 +105,9 @@ export async function getCoursesWithMaterialsForStudent(studentId: number) {
     select: { specialtyId: true },
   });
 
-  if (!student) return null;
+  if (!student) {
+    return null;
+  }
 
   const courses = await prisma.course.findMany({
     where: { specialtyId: student.specialtyId },

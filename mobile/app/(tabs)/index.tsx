@@ -10,7 +10,8 @@ import { Calendar, type DateData } from "react-native-calendars";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/services/api";
 import { homeStyles as styles } from "@/styles/home";
-import type { EventItem, Announcement } from "@/types/events";
+import type { EventItem } from "@shared/types/events";
+import type { Announcement } from "@shared/types/announcements";
 
 const TYPE_COLORS: Record<string, string> = {
   "ИНФОРМАЦИЯ": "#3b82f6",

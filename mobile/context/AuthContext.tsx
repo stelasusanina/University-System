@@ -7,6 +7,7 @@ import {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { User } from "@shared/types/auth";
+import { api } from "@/services/api";
 
 interface AuthContextType {
   user: User | null;
@@ -30,7 +31,9 @@ function parseJwtExp(token: string): number | null {
 
 function isTokenExpired(token: string): boolean {
   const exp = parseJwtExp(token);
-  if (!exp) return true;
+  if (!exp) {
+    return true;
+  }
   return exp * 1000 <= Date.now();
 }
 
@@ -57,7 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      return;
+    }
 
     const exp = parseJwtExp(token);
     if (!exp) {
@@ -78,6 +83,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    const pushToken = await AsyncStorage.getItem("pushToken");
+    if (pushToken) {
+      api.delete("/push-token", { token: pushToken }).catch(() => {});
+      await AsyncStorage.removeItem("pushToken");
+    }
     await AsyncStorage.removeItem("token");
     await AsyncStorage.removeItem("user");
     setToken(null);

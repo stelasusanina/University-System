@@ -15,13 +15,23 @@ export default function TabLayout() {
     }
   }, [isReady, isAuthenticated]);
 
-  if (!isReady) return null;
+  if (!isReady) {
+    return null;
+  }
 
   return (
     <Tabs screenOptions={{ headerShown: false }}>
       <Tabs.Screen
         name="index"
         options={{ title: "Начало" }}
+      />
+      <Tabs.Screen
+        name="schedule"
+        options={{ title: "Програма" }}
+      />
+      <Tabs.Screen
+        name="map"
+        options={{ title: "Кампус" }}
       />
     </Tabs>
   );

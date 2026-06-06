@@ -8,14 +8,18 @@ export async function getEnrollmentsForCourse(
   const course = await prisma.course.findFirst({
     where: { id: courseId, academicStaffId },
   });
-  if (!course) return { error: "Course not found or not assigned to you", status: 403 };
+  if (!course) {
+    return { error: "Course not found or not assigned to you", status: 403 };
+  }
 
   const currentSemester = await prisma.semester.findFirst({
     where: { isCurrent: true },
     orderBy: [{ startDate: "desc" }],
     select: { id: true, name: true },
   });
-  if (!currentSemester) return { error: "No active semester found", status: 404 };
+  if (!currentSemester) {
+    return { error: "No active semester found", status: 404 };
+  }
 
   const enrollments = await prisma.enrollment.findMany({
     where: { courseId, semesterId: currentSemester.id },
@@ -54,7 +58,9 @@ export async function getCoursesWithEnrollments(
     orderBy: [{ startDate: "desc" }],
     select: { id: true, name: true },
   });
-  if (!currentSemester) return { error: "No active semester found", status: 404 };
+  if (!currentSemester) {
+    return { error: "No active semester found", status: 404 };
+  }
 
   const courses = await prisma.course.findMany({
     where: {
@@ -85,7 +91,9 @@ export async function setGrade(
     where: { id: enrollmentId },
     select: { id: true, course: { select: { academicStaffId: true } } },
   });
-  if (!enrollment) return { error: "Enrollment not found", status: 404 };
+  if (!enrollment) {
+    return { error: "Enrollment not found", status: 404 };
+  }
   if (enrollment.course.academicStaffId !== academicStaffId)
     return { error: "You are not the lecturer for this course", status: 403 };
 

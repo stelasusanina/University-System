@@ -1,21 +1,20 @@
 import { prisma } from "../prisma.ts";
 
 export async function registerPushToken(userId: number, token: string) {
-  // Upsert: if token already exists for this user, skip. If it exists for another user, reassign.
   const existing = await prisma.pushToken.findUnique({ where: { token } });
 
   if (existing) {
-    if (existing.userId === userId) return existing;
-    // Token moved to a different user (re-login on same device)
-    return prisma.pushToken.update({
-      where: { token },
-      data: { userId },
-    });
+    if (existing.userId === userId) {
+      return existing;
+    }
+    // Token moved to a different user (re-login on same device) — reassign
+    return prisma.pushToken.update({ where: { token }, data: { userId } });
   }
 
-  return prisma.pushToken.create({
-    data: { token, userId },
-  });
+  // New token for this user — delete any stale tokens they had before
+  await prisma.pushToken.deleteMany({ where: { userId } });
+
+  return prisma.pushToken.create({ data: { token, userId } });
 }
 
 export async function removePushToken(token: string) {
@@ -38,7 +37,9 @@ export async function getTargetedPushTokens(
   });
 
   const studentIds = students.map((s) => s.id);
-  if (studentIds.length === 0) return [];
+  if (studentIds.length === 0) {
+    return [];
+  }
 
   const users = await prisma.user.findMany({
     where: { studentId: { in: studentIds } },
@@ -56,7 +57,9 @@ export async function sendPushNotifications(
   title: string,
   body: string,
 ) {
-  if (tokens.length === 0) return;
+  if (tokens.length === 0) {
+    return;
+  }
 
   const messages = tokens.map((token) => ({
     to: token,

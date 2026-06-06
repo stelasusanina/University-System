@@ -430,6 +430,14 @@ router.get("/materials/courses", authenticate, async (req, res) => {
   return res.json(result);
 });
 
+router.get("/buildings", authenticate, async (_req, res) => {
+  const buildings = await prisma.building.findMany({
+    select: { id: true, number: true, name: true, address: true, latitude: true, longitude: true },
+    orderBy: { number: "asc" },
+  });
+  return res.json(buildings);
+});
+
 // ── Push Tokens ───────────────────────────────────────────────────────────────
 
 router.post("/push-token", authenticate, async (req, res) => {
@@ -466,10 +474,10 @@ router.get("/grades/courses", authenticate, async (req, res) => {
     return res.status(403).json({ error: "Only academic staff can access grades" });
   }
   const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { academicStaffId: true } });
-  if (!userRecord?.academicStaffId) return res.status(403).json({ error: "Academic staff record not found" });
+  if (!userRecord?.academicStaffId) { return res.status(403).json({ error: "Academic staff record not found" }); }
 
   const result = await getCoursesWithEnrollments(userRecord.academicStaffId);
-  if ("error" in result) return res.status(result.status).json({ error: result.error });
+  if ("error" in result) { return res.status(result.status).json({ error: result.error }); }
   return res.json(result.data);
 });
 
@@ -480,13 +488,13 @@ router.get("/grades/course/:courseId", authenticate, async (req, res) => {
     return res.status(403).json({ error: "Only academic staff can access grades" });
   }
   const courseId = parseInt(req.params.courseId as string);
-  if (isNaN(courseId)) return res.status(400).json({ error: "Invalid courseId" });
+  if (isNaN(courseId)) { return res.status(400).json({ error: "Invalid courseId" }); }
 
   const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { academicStaffId: true } });
-  if (!userRecord?.academicStaffId) return res.status(403).json({ error: "Academic staff record not found" });
+  if (!userRecord?.academicStaffId) { return res.status(403).json({ error: "Academic staff record not found" }); }
 
   const result = await getEnrollmentsForCourse(courseId, userRecord.academicStaffId);
-  if ("error" in result) return res.status(result.status).json({ error: result.error });
+  if ("error" in result) { return res.status(result.status).json({ error: result.error }); }
   return res.json(result.data);
 });
 
@@ -497,27 +505,27 @@ router.put("/grades/enrollment/:id", authenticate, async (req, res) => {
     return res.status(403).json({ error: "Only academic staff can set grades" });
   }
   const enrollmentId = parseInt(req.params.id as string);
-  if (isNaN(enrollmentId)) return res.status(400).json({ error: "Invalid enrollment id" });
+  if (isNaN(enrollmentId)) { return res.status(400).json({ error: "Invalid enrollment id" }); }
 
   const { grade } = req.body as { grade?: number | null };
 
   const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { academicStaffId: true } });
-  if (!userRecord?.academicStaffId) return res.status(403).json({ error: "Academic staff record not found" });
+  if (!userRecord?.academicStaffId) { return res.status(403).json({ error: "Academic staff record not found" }); }
 
   const result = await setGrade(enrollmentId, userRecord.academicStaffId, grade ?? null);
-  if ("error" in result) return res.status(result.status).json({ error: result.error });
+  if ("error" in result) { return res.status(result.status).json({ error: result.error }); }
   return res.json(result.data);
 });
 
 // Student: get own grades across all semesters
 router.get("/grades/my", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
-  if (role !== "STUDENT") return res.status(403).json({ error: "Only students can access this endpoint" });
+  if (role !== "STUDENT") { return res.status(403).json({ error: "Only students can access this endpoint" }); }
 
   const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { studentId: true } });
-  if (!userRecord?.studentId) return res.status(403).json({ error: "Student record not found" });
+  if (!userRecord?.studentId) { return res.status(403).json({ error: "Student record not found" }); }
 
   const result = await getMyGrades(userRecord.studentId);
-  if ("error" in result) return res.status(result.status).json({ error: result.error });
+  if ("error" in result) { return res.status(result.status).json({ error: result.error }); }
   return res.json(result.data);
 });

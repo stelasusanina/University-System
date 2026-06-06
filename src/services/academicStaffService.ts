@@ -17,8 +17,12 @@ export async function getAcademicStaffProgram(userId: number): Promise<{ error: 
     },
   });
 
-  if (!user) return { error: "User not found", status: 404 };
-  if (!user.academicStaff) return { error: "Program view is available only for academic staff accounts", status: 403 };
+  if (!user) {
+    return { error: "User not found", status: 404 };
+  }
+  if (!user.academicStaff) {
+    return { error: "Program view is available only for academic staff accounts", status: 403 };
+  }
 
   const currentSemester = await prisma.semester.findFirst({
     where: { isCurrent: true },
@@ -26,7 +30,9 @@ export async function getAcademicStaffProgram(userId: number): Promise<{ error: 
     select: { id: true, name: true, period: true },
   });
 
-  if (!currentSemester) return { error: "No active semester found", status: 404 };
+  if (!currentSemester) {
+    return { error: "No active semester found", status: 404 };
+  }
 
   const courses = await prisma.course.findMany({
     where: {

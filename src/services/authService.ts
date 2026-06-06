@@ -1,20 +1,20 @@
 import { prisma } from "../prisma.ts";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import type { StringValue } from "ms";
 import { getRequiredEnv } from "../env.ts";
 
 const JWT_SECRET = getRequiredEnv("JWT_SECRET");
-const JWT_EXPIRES_IN = "2h";
 
-function signToken(user: { id: number; email: string; role: string }) {
+function signToken(user: { id: number; email: string; role: string }, expiresIn: StringValue = "2h") {
   return jwt.sign(
     { userId: user.id, email: user.email, role: user.role },
     JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN },
+    { expiresIn },
   );
 }
 
-export async function loginUser(email: string, password: string): Promise<{ error: string; status: number } | { token: string; user: { id: number; email: string; role: string; firstName: string; lastName: string } }> {
+export async function loginUser(email: string, password: string, mobile = false): Promise<{ error: string; status: number } | { token: string; user: { id: number; email: string; role: string; firstName: string; lastName: string } }> {
   const user = await prisma.user.findUnique({
     where: { email },
     select: { id: true, email: true, role: true, password: true, student: { select: { firstName: true, lastName: true } }, academicStaff: { select: { firstName: true, lastName: true } } },
@@ -31,7 +31,7 @@ export async function loginUser(email: string, password: string): Promise<{ erro
   }
 
   const person = (user.student ?? user.academicStaff)!;
-  const token = signToken(user);
+  const token = signToken(user, mobile ? "30d" : "2h");
   return { token, user: { id: user.id, email: user.email, role: user.role, firstName: person.firstName, lastName: person.lastName } };
 }
 

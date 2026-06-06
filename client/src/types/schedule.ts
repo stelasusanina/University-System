@@ -1,4 +1,4 @@
-import type { BuildingInfo } from "./building";
+import type { Building } from "@shared/types/schedule";
 
 export type StudentProgramResponse = {
   student: {
@@ -37,7 +37,7 @@ export type StudentProgramResponse = {
       endTime: string;
       room: string;
       type: string;
-      building: BuildingInfo | null;
+      building: Building | null;
     }>;
   }>;
 };
@@ -87,5 +87,5 @@ export type TimetableEntry = {
   type: string;
   courseCode: string;
   courseName: string;
-  building: BuildingInfo | null;
+  building: Building | null;
 };

@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "@/services/api";
 
 Notifications.setNotificationHandler({
@@ -20,10 +21,11 @@ export function useRegisterPushNotifications() {
   const router = useRouter();
 
   useEffect(() => {
-    registerForPushNotifications().then((token) => {
+    registerForPushNotifications().then(async (token) => {
       if (token) {
         console.log("ExpoPushToken:", token);
         tokenRef.current = token;
+        await AsyncStorage.setItem("pushToken", token);
         api.post("/push-token", { token }).catch(() => {});
       }
     });

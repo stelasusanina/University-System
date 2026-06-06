@@ -4,13 +4,13 @@ import { loginUser, registerUser } from "../services/authService.ts";
 export const authRouter = Router();
 
 authRouter.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, mobile } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required" });
   }
 
-  const result = await loginUser(email, password);
+  const result = await loginUser(email, password, !!mobile);
 
   if ("error" in result) {
     return res.status(result.status).json({ error: result.error });
