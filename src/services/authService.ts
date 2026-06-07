@@ -14,6 +14,10 @@ function signToken(user: { id: number; email: string; role: string }, expiresIn:
   );
 }
 
+export function refreshToken(userId: number, email: string, role: string): string {
+  return signToken({ id: userId, email, role }, "30d");
+}
+
 export async function loginUser(email: string, password: string, mobile = false): Promise<{ error: string; status: number } | { token: string; user: { id: number; email: string; role: string; firstName: string; lastName: string } }> {
   const user = await prisma.user.findUnique({
     where: { email },

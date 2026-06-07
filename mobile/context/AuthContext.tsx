@@ -50,6 +50,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (storedToken && storedUser && !isTokenExpired(storedToken)) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
+
+        api.post<{ token: string }>("/auth/refresh", {})
+          .then(async ({ token: newToken }) => {
+            await AsyncStorage.setItem("token", newToken);
+            setToken(newToken);
+          })
+          .catch(() => {});
       } else {
         await AsyncStorage.removeItem("token");
         await AsyncStorage.removeItem("user");

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authenticate } from "./middleware/auth.ts";
 import type { AuthenticatedRequest } from "./middleware/auth.ts";
-import { loginUser, registerUser } from "./services/authService.ts";
+import { loginUser, registerUser, refreshToken } from "./services/authService.ts";
 import { getStudentProgram } from "./services/studentService.ts";
 import { getAcademicStaffProgram } from "./services/academicStaffService.ts";
 import { getEventsForUser, createEvent, deleteEvent } from "./services/eventService.ts";
@@ -14,6 +14,14 @@ import { prisma } from "./prisma.ts";
 import type { Request } from "express";
 
 export const router = Router();
+
+router.post("/auth/refresh", authenticate, (req, res) => {
+  const { userId, email, role } = (req as AuthenticatedRequest).user;
+  if (!userId || !email) {
+    return res.status(401).json({ error: "Invalid token payload" });
+  }
+  return res.json({ token: refreshToken(userId, email, role) });
+});
 
 router.post("/auth/login", async (req, res) => {
   const { email, password } = req.body;
@@ -169,7 +177,6 @@ router.post("/announcements", authenticate, async (req, res) => {
     return res.status(result.status).json({ error: result.error });
   }
 
-  // Send push notifications to targeted students (fire-and-forget)
   getTargetedPushTokens(specialtyId, year, group ?? null)
     .then((tokens) => {
       if (tokens.length > 0) {
@@ -248,9 +255,6 @@ router.delete("/announcements/:id", authenticate, async (req, res) => {
   return res.json({ success: true });
 });
 
-// ── Materials ────────────────────────────────────────────────────────────────
-
-// Staff: upload a file for a course
 router.post(
   "/materials",
   authenticate,
@@ -290,7 +294,6 @@ router.post(
       return res.status(400).json({ error: "courseId must be a number" });
     }
 
-    // Resolve academicStaffId from userId
     const userRecord = await prisma.user.findUnique({
       where: { id: userId! },
       select: { academicStaffId: true },
@@ -317,7 +320,6 @@ router.post(
   },
 );
 
-// Anyone authenticated: list materials for a course
 router.get("/materials/course/:courseId", authenticate, async (req, res) => {
   const courseId = parseInt(req.params.courseId as string);
   if (isNaN(courseId)) {
@@ -328,7 +330,6 @@ router.get("/materials/course/:courseId", authenticate, async (req, res) => {
   return res.json(materials);
 });
 
-// Staff: list all courses they can upload materials to
 router.get("/materials/staff-courses", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
 
@@ -350,7 +351,6 @@ router.get("/materials/staff-courses", authenticate, async (req, res) => {
   return res.json(courses);
 });
 
-// Staff: list all materials they have uploaded
 router.get("/materials/my", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
 
@@ -372,7 +372,6 @@ router.get("/materials/my", authenticate, async (req, res) => {
   return res.json(materials);
 });
 
-// Staff: delete own material
 router.delete("/materials/:id", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
 
@@ -404,7 +403,6 @@ router.delete("/materials/:id", authenticate, async (req, res) => {
   return res.json({ success: true });
 });
 
-// Student: list enrolled courses with their materials for current semester
 router.get("/materials/courses", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
 
@@ -438,8 +436,6 @@ router.get("/buildings", authenticate, async (_req, res) => {
   return res.json(buildings);
 });
 
-// ── Push Tokens ───────────────────────────────────────────────────────────────
-
 router.post("/push-token", authenticate, async (req, res) => {
   const { userId } = (req as AuthenticatedRequest).user;
   const { token } = req.body;
@@ -463,11 +459,8 @@ router.delete("/push-token", authenticate, async (req, res) => {
   return res.json({ success: true });
 });
 
-// ── Grades ────────────────────────────────────────────────────────────────────
-
 const STAFF_ROLES_GRADES = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
 
-// Staff: list their courses (current semester) for the grades overview
 router.get("/grades/courses", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
   if (!STAFF_ROLES_GRADES.includes(role)) {
@@ -481,7 +474,6 @@ router.get("/grades/courses", authenticate, async (req, res) => {
   return res.json(result.data);
 });
 
-// Staff: get all enrollments for one of their courses
 router.get("/grades/course/:courseId", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
   if (!STAFF_ROLES_GRADES.includes(role)) {
@@ -498,7 +490,6 @@ router.get("/grades/course/:courseId", authenticate, async (req, res) => {
   return res.json(result.data);
 });
 
-// Staff: set or update a grade
 router.put("/grades/enrollment/:id", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
   if (!STAFF_ROLES_GRADES.includes(role)) {
@@ -517,7 +508,6 @@ router.put("/grades/enrollment/:id", authenticate, async (req, res) => {
   return res.json(result.data);
 });
 
-// Student: get own grades across all semesters
 router.get("/grades/my", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
   if (role !== "STUDENT") { return res.status(403).json({ error: "Only students can access this endpoint" }); }
