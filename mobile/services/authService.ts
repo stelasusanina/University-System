@@ -1,6 +1,7 @@
 import { api } from "./api";
-import type { LoginRequest, LoginResponse } from "@shared/types/auth";
+import type { LoginRequest, LoginResponse, RegisterRequest } from "@shared/types/auth";
 
 export const authService = {
   login: (data: LoginRequest) => api.post<LoginResponse>("/auth/login", { ...data, mobile: true }),
+  register: (data: RegisterRequest) => api.post<LoginResponse>("/auth/register", data),
 };

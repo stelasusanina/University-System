@@ -4,6 +4,7 @@ export interface Building {
   address: string;
   latitude: number | null;
   longitude: number | null;
+  googleMapsUrl: string | null;
 }
 
 export interface ScheduleEntry {

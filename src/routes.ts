@@ -428,13 +428,6 @@ router.get("/materials/courses", authenticate, async (req, res) => {
   return res.json(result);
 });
 
-router.get("/buildings", authenticate, async (_req, res) => {
-  const buildings = await prisma.building.findMany({
-    select: { id: true, number: true, name: true, address: true, latitude: true, longitude: true },
-    orderBy: { number: "asc" },
-  });
-  return res.json(buildings);
-});
 
 router.post("/push-token", authenticate, async (req, res) => {
   const { userId } = (req as AuthenticatedRequest).user;

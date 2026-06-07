@@ -72,4 +72,16 @@ export const loginStyles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
   },
+  switchLink: {
+    marginTop: 20,
+    alignItems: "center",
+  },
+  switchText: {
+    fontSize: 14,
+    color: "#64748b",
+  },
+  switchTextBold: {
+    color: "#3b5bdb",
+    fontWeight: "700",
+  },
 });
