@@ -1,5 +1,15 @@
 import { prisma } from "../prisma.ts";
-import { getBuildingNumberFromRoom } from "../utils/building.ts";
+
+function getBuildingNumberFromRoom(room: string): number | null {
+  const digits = room.replace(/\D/g, "");
+  if (digits.length === 5) {
+    return parseInt(digits.substring(0, 2), 10);
+  }
+  if (digits.length === 4) {
+    return parseInt(digits.charAt(0), 10);
+  }
+  return null;
+}
 
 export async function getStudentProgram(userId: number): Promise<{ error: string; status: number } | { data: Record<string, unknown> }> {
   const user = await prisma.user.findUnique({

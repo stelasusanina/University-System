@@ -1,8 +1,10 @@
 import jwt from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
-import { getRequiredEnv } from "../env.ts";
 
-const JWT_SECRET = getRequiredEnv("JWT_SECRET");
+if (!process.env.JWT_SECRET) {
+  throw new Error("Missing required environment variable: JWT_SECRET");
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 type AuthUser = {
   userId?: number;

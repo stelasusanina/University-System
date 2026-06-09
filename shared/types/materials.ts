@@ -1,13 +1,13 @@
-export interface Material {
+export type Material = {
   id: number;
   title: string;
   description: string | null;
   fileUrl: string;
   fileType: string;
   uploadedAt: string;
-}
+};
 
-export interface CourseWithMaterials {
+export type CourseWithMaterials = {
   id: number;
   code: string;
   name: string;
@@ -15,8 +15,8 @@ export interface CourseWithMaterials {
   type: string;
   academicStaff: { firstName: string; lastName: string; title: string };
   materials: Material[];
-}
+};
 
-export interface StudentMaterials {
+export type StudentMaterials = {
   courses: CourseWithMaterials[];
-}
+};

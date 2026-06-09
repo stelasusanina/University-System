@@ -1,4 +1,4 @@
-export interface EventItem {
+export type EventItem = {
   id: number;
   title: string;
   type: string;
@@ -11,9 +11,9 @@ export interface EventItem {
   specialty?: { name: string };
   year?: number;
   group?: number | null;
-}
+};
 
-export interface EventsResponse {
+export type EventsResponse = {
   dates: string[];
   events: EventItem[];
-}
+};

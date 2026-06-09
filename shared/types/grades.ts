@@ -1,4 +1,4 @@
-export interface GradeEntry {
+export type GradeEntry = {
   id: number;
   finalGrade: number;
   course: {
@@ -9,37 +9,37 @@ export interface GradeEntry {
     type: string;
     academicStaff: { firstName: string; lastName: string; title: string };
   };
-}
+};
 
-export interface SemesterGrades {
+export type SemesterGrades = {
   semester: { id: number; name: string; period: string };
   curriculumSemester: number;
   group: { number: number; year: number; specialty: { name: string } };
   grades: GradeEntry[];
-}
+};
 
-export interface StudentGrades {
+export type StudentGrades = {
   semesters: SemesterGrades[];
-}
+};
 
-export interface StudentRow {
+export type StudentRow = {
   id: number;
   facultyNumber: string;
   firstName: string;
   lastName: string;
   grade: { id: number; finalGrade: number } | null;
-}
+};
 
-export interface CourseGroupRow {
+export type CourseGroupRow = {
   id: number;
   curriculumSemester: number;
   group: { id: number; number: number; year: number; specialty: { name: string } };
   _count: { grades: number };
-}
+};
 
-export interface CourseWithGroups {
+export type CourseWithGroups = {
   id: number;
   code: string;
   name: string;
   courseGroups: CourseGroupRow[];
-}
+};

@@ -1,4 +1,4 @@
-export interface Announcement {
+export type Announcement = {
   id: number;
   message: string;
   type: string;
@@ -9,17 +9,17 @@ export interface Announcement {
   specialty?: { name: string };
   year?: number;
   group?: number | null;
-}
+};
 
-export interface Course {
+export type Course = {
   id: number;
   code: string;
   name: string;
   specialtyId: number;
-}
+};
 
-export interface Specialty {
+export type Specialty = {
   id: number;
   name: string;
   years: number;
-}
+};

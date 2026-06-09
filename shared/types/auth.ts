@@ -1,25 +1,25 @@
-export interface User {
+export type User = {
   id: number;
   email: string;
   role: string;
   firstName: string;
   lastName: string;
-}
+};
 
-export interface LoginRequest {
+export type LoginRequest = {
   email: string;
   password: string;
-}
+};
 
-export interface LoginResponse {
+export type LoginResponse = {
   token: string;
   user: User;
-}
+};
 
-export interface RegisterRequest {
+export type RegisterRequest = {
   email: string;
   identifierNumber: string;
   firstName: string;
   lastName: string;
   password: string;
-}
+};

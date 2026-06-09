@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.tsx";
 import { api } from "../services/api.ts";
-import type { Building } from "@shared/types/schedule";
+import type { Building, ProgramResponse, TimetableEntry } from "@shared/types/schedule";
 import Navbar from "../components/Navbar";
-import type { ProgramResponse, TimetableEntry } from "../types/schedule";
 
 const dayOrder = ["ПОНЕДЕЛНИК", "ВТОРНИК", "СРЯДА", "ЧЕТВЪРТЪК", "ПЕТЪК"];
 

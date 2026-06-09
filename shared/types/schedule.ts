@@ -1,4 +1,4 @@
-export interface Building {
+export type Building = {
   number: number;
   name: string;
   address: string;
@@ -7,7 +7,7 @@ export interface Building {
   googleMapsUrl: string | null;
 }
 
-export interface ScheduleEntry {
+export type ScheduleEntry = {
   id: number;
   dayOfWeek: string;
   startTime: string;
@@ -17,7 +17,7 @@ export interface ScheduleEntry {
   building: Building | null;
 }
 
-export interface CourseWithSchedule {
+export type CourseWithSchedule = {
   id: number;
   code: string;
   name: string;
@@ -28,7 +28,7 @@ export interface CourseWithSchedule {
   schedules: ScheduleEntry[];
 }
 
-export interface StudentProgram {
+export type StudentProgram = {
   student: {
     id: number;
     facultyNumber: string;
@@ -42,3 +42,93 @@ export interface StudentProgram {
   semester: { id: number; name: string; period: string };
   courses: CourseWithSchedule[];
 }
+
+export type StudentProgramResponse = {
+  student: {
+    id: number;
+    facultyNumber: string;
+    firstName: string;
+    lastName: string;
+    year: number;
+    group: number;
+    specialty: string;
+    faculty: string;
+  };
+  semester: {
+    id: number;
+    name: string;
+    year: number;
+    period: string;
+  };
+  courses: Array<{
+    id: number;
+    code: string;
+    name: string;
+    description: string | null;
+    credits: number;
+    type: string;
+    status: string;
+    lecturer: {
+      firstName: string;
+      lastName: string;
+      title: string;
+    };
+    schedules: Array<{
+      id: number;
+      dayOfWeek: string;
+      startTime: string;
+      endTime: string;
+      room: string;
+      type: string;
+      building: Building | null;
+    }>;
+  }>;
+};
+
+export type StaffProgramResponse = {
+  staff: {
+    id: number;
+    staffNumber: string;
+    firstName: string;
+    lastName: string;
+    title: string;
+    faculty: string;
+  };
+  semester: {
+    id: number;
+    name: string;
+    year: number;
+    period: string;
+  };
+  courses: Array<{
+    id: number;
+    code: string;
+    name: string;
+    description: string | null;
+    credits: number;
+    type: string;
+    specialty: string;
+    schedules: Array<{
+      id: number;
+      dayOfWeek: string;
+      startTime: string;
+      endTime: string;
+      room: string;
+      type: string;
+    }>;
+  }>;
+};
+
+export type ProgramResponse = StudentProgramResponse | StaffProgramResponse;
+
+export type TimetableEntry = {
+  id: number;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  room: string;
+  type: string;
+  courseCode: string;
+  courseName: string;
+  building: Building | null;
+};

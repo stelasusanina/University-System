@@ -2,9 +2,11 @@ import { prisma } from "../prisma.ts";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import type { StringValue } from "ms";
-import { getRequiredEnv } from "../env.ts";
 
-const JWT_SECRET = getRequiredEnv("JWT_SECRET");
+if (!process.env.JWT_SECRET) {
+  throw new Error("Missing required environment variable: JWT_SECRET");
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 function signToken(user: { id: number; email: string; role: string }, expiresIn: StringValue = "2h") {
   return jwt.sign(
