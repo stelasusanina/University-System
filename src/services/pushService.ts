@@ -7,13 +7,10 @@ export async function registerPushToken(userId: number, token: string) {
     if (existing.userId === userId) {
       return existing;
     }
-    // Token moved to a different user (re-login on same device) — reassign
     return prisma.pushToken.update({ where: { token }, data: { userId } });
   }
 
-  // New token for this user — delete any stale tokens they had before
   await prisma.pushToken.deleteMany({ where: { userId } });
-
   return prisma.pushToken.create({ data: { token, userId } });
 }
 
@@ -21,45 +18,36 @@ export async function removePushToken(token: string) {
   await prisma.pushToken.deleteMany({ where: { token } });
 }
 
-// Get push tokens for students matching a specialty/year/group filter
-export async function getTargetedPushTokens(
-  specialtyId: number,
-  year: number,
-  group: number | null,
-) {
-  const students = await prisma.student.findMany({
-    where: {
-      specialtyId,
-      year,
-      ...(group != null ? { group } : {}),
-    },
+export async function getTargetedPushTokens(groupId: number | null) {
+  const currentSemester = await prisma.semester.findFirst({
+    where: { isCurrent: true },
+    orderBy: [{ startDate: "desc" }],
     select: { id: true },
   });
 
-  const studentIds = students.map((s) => s.id);
-  if (studentIds.length === 0) {
-    return [];
-  }
+  if (!currentSemester) return [];
+
+  const studentSemesters = await prisma.studentSemester.findMany({
+    where: {
+      semesterId: currentSemester.id,
+      ...(groupId != null ? { groupId } : {}),
+    },
+    select: { studentId: true },
+  });
+
+  const studentIds = studentSemesters.map((ss) => ss.studentId);
+  if (studentIds.length === 0) return [];
 
   const users = await prisma.user.findMany({
     where: { studentId: { in: studentIds } },
-    select: {
-      pushTokens: { select: { token: true } },
-    },
+    select: { pushTokens: { select: { token: true } } },
   });
 
   return users.flatMap((u) => u.pushTokens.map((t) => t.token));
 }
 
-// Send push notifications via Expo Push API
-export async function sendPushNotifications(
-  tokens: string[],
-  title: string,
-  body: string,
-) {
-  if (tokens.length === 0) {
-    return;
-  }
+export async function sendPushNotifications(tokens: string[], title: string, body: string) {
+  if (tokens.length === 0) return;
 
   const messages = tokens.map((token) => ({
     to: token,
@@ -68,7 +56,6 @@ export async function sendPushNotifications(
     body,
   }));
 
-  // Expo accepts batches of up to 100
   const chunks: typeof messages[] = [];
   for (let i = 0; i < messages.length; i += 100) {
     chunks.push(messages.slice(i, i + 100));
@@ -78,9 +65,7 @@ export async function sendPushNotifications(
     try {
       await fetch("https://exp.host/--/api/v2/push/send", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(chunk),
       });
     } catch (err) {

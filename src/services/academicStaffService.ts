@@ -46,7 +46,12 @@ export async function getAcademicStaffProgram(userId: number): Promise<{ error: 
       description: true,
       credits: true,
       type: true,
-      specialty: { select: { name: true } },
+      courseGroups: {
+        select: {
+          curriculumSemester: true,
+          group: { select: { number: true, year: true, specialty: { select: { name: true } } } },
+        },
+      },
       schedules: {
         where: { semesterId: currentSemester.id },
         orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
@@ -62,10 +67,7 @@ export async function getAcademicStaffProgram(userId: number): Promise<{ error: 
     data: {
       staff: { ...staffData, faculty: faculty.name },
       semester: currentSemester,
-      courses: courses.map(({ specialty, ...course }) => ({
-        ...course,
-        specialty: specialty.name,
-      })),
+      courses,
     },
   };
 }

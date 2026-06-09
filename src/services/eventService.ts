@@ -4,7 +4,7 @@ export async function getEventsForUser(userId: number): Promise<{ error: string;
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
-      student: { select: { specialtyId: true, year: true, group: true } },
+      student: { select: { id: true } },
       academicStaff: { select: { id: true } },
     },
   });
@@ -26,14 +26,17 @@ export async function getEventsForUser(userId: number): Promise<{ error: string;
   let events;
 
   if (user.student) {
+    const studentSemester = await prisma.studentSemester.findUnique({
+      where: { studentId_semesterId: { studentId: user.student.id, semesterId: currentSemester.id } },
+      select: { groupId: true },
+    });
+
     events = await prisma.event.findMany({
       where: {
         semesterId: currentSemester.id,
-        specialtyId: user.student.specialtyId,
-        year: user.student.year,
         OR: [
-          { group: null },
-          { group: user.student.group },
+          { groupId: null },
+          ...(studentSemester ? [{ groupId: studentSemester.groupId }] : []),
         ],
       },
       select: {
@@ -64,9 +67,7 @@ export async function getEventsForUser(userId: number): Promise<{ error: string;
         endTime: true,
         room: true,
         course: { select: { code: true, name: true } },
-        specialty: { select: { name: true } },
-        year: true,
-        group: true,
+        group: { select: { number: true, year: true, specialty: { select: { name: true } } } },
       },
       orderBy: { date: "asc" },
     });
@@ -89,9 +90,7 @@ export async function createEvent(
     endTime?: string;
     room?: string;
     courseId: number;
-    specialtyId: number;
-    year: number;
-    group?: number;
+    groupId?: number;
   },
 ): Promise<{ error: string; status: number } | { data: Record<string, unknown>; status: number }> {
   const user = await prisma.user.findUnique({
@@ -130,9 +129,7 @@ export async function createEvent(
       room: body.room ?? null,
       courseId: body.courseId,
       academicStaffId: user.academicStaff.id,
-      specialtyId: body.specialtyId,
-      year: body.year,
-      group: body.group ?? null,
+      groupId: body.groupId ?? null,
       semesterId: currentSemester.id,
     },
     select: {
@@ -144,9 +141,7 @@ export async function createEvent(
       endTime: true,
       room: true,
       course: { select: { code: true, name: true } },
-      specialty: { select: { name: true } },
-      year: true,
-      group: true,
+      group: { select: { number: true, year: true, specialty: { select: { name: true } } } },
     },
   });
 

@@ -7,7 +7,7 @@ import { getAcademicStaffProgram } from "./services/academicStaffService.ts";
 import { getEventsForUser, createEvent, deleteEvent } from "./services/eventService.ts";
 import { createAnnouncement, getAnnouncementsForUser, updateAnnouncement, deleteAnnouncement, getStaffFormOptions } from "./services/announcementService.ts";
 import { uploadMaterial, getMaterialsForCourse, getMaterialsByStaff, deleteMaterial, getCoursesWithMaterialsForStudent, getCoursesForStaff } from "./services/materialService.ts";
-import { getEnrollmentsForCourse, getCoursesWithEnrollments, setGrade, getMyGrades } from "./services/gradeService.ts";
+import { getCoursesWithStudents, getStudentsForCourseGroup, setGrade, getMyGrades } from "./services/gradeService.ts";
 import { registerPushToken, removePushToken, getTargetedPushTokens, sendPushNotifications } from "./services/pushService.ts";
 import { upload } from "./utils/upload.ts";
 import { prisma } from "./prisma.ts";
@@ -126,13 +126,13 @@ router.post("/events", authenticate, async (req, res) => {
     return res.status(401).json({ error: "Invalid token payload" });
   }
 
-  const { title, type, date, startTime, endTime, room, courseId, specialtyId, year, group } = req.body;
+  const { title, type, date, startTime, endTime, room, courseId, groupId } = req.body;
 
-  if (!title || !type || !date || !courseId || !specialtyId || !year) {
-    return res.status(400).json({ error: "title, type, date, courseId, specialtyId, and year are required" });
+  if (!title || !type || !date || !courseId) {
+    return res.status(400).json({ error: "title, type, date, and courseId are required" });
   }
 
-  const result = await createEvent(userId, { title, type, date, startTime, endTime, room, courseId, specialtyId, year, group });
+  const result = await createEvent(userId, { title, type, date, startTime, endTime, room, courseId, groupId });
 
   if ("error" in result) {
     return res.status(result.status).json({ error: result.error });
@@ -165,19 +165,19 @@ router.post("/announcements", authenticate, async (req, res) => {
     return res.status(401).json({ error: "Invalid token payload" });
   }
 
-  const { message, type, validTo, courseId, specialtyId, year, group } = req.body;
+  const { message, type, validTo, courseId, groupId } = req.body;
 
-  if (!message || !validTo || !specialtyId || !year) {
-    return res.status(400).json({ error: "message, validTo, specialtyId, and year are required" });
+  if (!message || !validTo) {
+    return res.status(400).json({ error: "message and validTo are required" });
   }
 
-  const result = await createAnnouncement(userId, { message, type, validTo, courseId, specialtyId, year, group });
+  const result = await createAnnouncement(userId, { message, type, validTo, courseId, groupId });
 
   if ("error" in result) {
     return res.status(result.status).json({ error: result.error });
   }
 
-  getTargetedPushTokens(specialtyId, year, group ?? null)
+  getTargetedPushTokens(groupId ?? null)
     .then((tokens) => {
       if (tokens.length > 0) {
         const title = type ? type.replaceAll("_", " ") : "Ново съобщение";
@@ -422,12 +422,11 @@ router.get("/materials/courses", authenticate, async (req, res) => {
   const result = await getCoursesWithMaterialsForStudent(userRecord.studentId);
 
   if (!result) {
-    return res.status(404).json({ error: "Student not found" });
+    return res.status(404).json({ error: "Student not enrolled in current semester" });
   }
 
   return res.json(result);
 });
-
 
 router.post("/push-token", authenticate, async (req, res) => {
   const { userId } = (req as AuthenticatedRequest).user;
@@ -462,41 +461,43 @@ router.get("/grades/courses", authenticate, async (req, res) => {
   const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { academicStaffId: true } });
   if (!userRecord?.academicStaffId) { return res.status(403).json({ error: "Academic staff record not found" }); }
 
-  const result = await getCoursesWithEnrollments(userRecord.academicStaffId);
+  const result = await getCoursesWithStudents(userRecord.academicStaffId);
   if ("error" in result) { return res.status(result.status).json({ error: result.error }); }
   return res.json(result.data);
 });
 
-router.get("/grades/course/:courseId", authenticate, async (req, res) => {
+router.get("/grades/course-group/:courseGroupId", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
   if (!STAFF_ROLES_GRADES.includes(role)) {
     return res.status(403).json({ error: "Only academic staff can access grades" });
   }
-  const courseId = parseInt(req.params.courseId as string);
-  if (isNaN(courseId)) { return res.status(400).json({ error: "Invalid courseId" }); }
+  const courseGroupId = parseInt(req.params.courseGroupId as string);
+  if (isNaN(courseGroupId)) { return res.status(400).json({ error: "Invalid courseGroupId" }); }
 
   const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { academicStaffId: true } });
   if (!userRecord?.academicStaffId) { return res.status(403).json({ error: "Academic staff record not found" }); }
 
-  const result = await getEnrollmentsForCourse(courseId, userRecord.academicStaffId);
+  const result = await getStudentsForCourseGroup(courseGroupId, userRecord.academicStaffId);
   if ("error" in result) { return res.status(result.status).json({ error: result.error }); }
   return res.json(result.data);
 });
 
-router.put("/grades/enrollment/:id", authenticate, async (req, res) => {
+router.put("/grades", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
   if (!STAFF_ROLES_GRADES.includes(role)) {
     return res.status(403).json({ error: "Only academic staff can set grades" });
   }
-  const enrollmentId = parseInt(req.params.id as string);
-  if (isNaN(enrollmentId)) { return res.status(400).json({ error: "Invalid enrollment id" }); }
 
-  const { grade } = req.body as { grade?: number | null };
+  const { studentId, courseGroupId, grade } = req.body as { studentId?: number; courseGroupId?: number; grade?: number | null };
+
+  if (!studentId || !courseGroupId) {
+    return res.status(400).json({ error: "studentId and courseGroupId are required" });
+  }
 
   const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { academicStaffId: true } });
   if (!userRecord?.academicStaffId) { return res.status(403).json({ error: "Academic staff record not found" }); }
 
-  const result = await setGrade(enrollmentId, userRecord.academicStaffId, grade ?? null);
+  const result = await setGrade(studentId, courseGroupId, userRecord.academicStaffId, grade ?? null);
   if ("error" in result) { return res.status(result.status).json({ error: result.error }); }
   return res.json(result.data);
 });

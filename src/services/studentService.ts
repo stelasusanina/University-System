@@ -11,14 +11,6 @@ export async function getStudentProgram(userId: number): Promise<{ error: string
           facultyNumber: true,
           firstName: true,
           lastName: true,
-          year: true,
-          group: true,
-          specialty: {
-            select: {
-              name: true,
-              faculty: { select: { name: true } },
-            },
-          },
         },
       },
     },
@@ -41,15 +33,35 @@ export async function getStudentProgram(userId: number): Promise<{ error: string
     return { error: "No active semester found", status: 404 };
   }
 
+  const studentSemester = await prisma.studentSemester.findUnique({
+    where: { studentId_semesterId: { studentId: user.student.id, semesterId: currentSemester.id } },
+    select: {
+      groupId: true,
+      group: {
+        select: {
+          number: true,
+          year: true,
+          specialty: { select: { name: true, faculty: { select: { name: true } } } },
+        },
+      },
+    },
+  });
+
+  if (!studentSemester) {
+    return { error: "Student is not enrolled in the current semester", status: 404 };
+  }
+
+  const curriculumSemester = (studentSemester.group.year - 1) * 2 + (currentSemester.period === "WINTER" ? 1 : 2);
+
   const buildings = await prisma.building.findMany({
     select: { number: true, name: true, address: true, latitude: true, longitude: true, googleMapsUrl: true },
   });
   const buildingMap = new Map(buildings.map((b) => [b.number, b]));
 
-  const enrollments = await prisma.enrollment.findMany({
+  const courseGroups = await prisma.courseGroup.findMany({
     where: {
-      studentId: user.student.id,
-      semesterId: currentSemester.id,
+      groupId: studentSemester.groupId,
+      curriculumSemester,
     },
     select: {
       course: {
@@ -71,16 +83,20 @@ export async function getStudentProgram(userId: number): Promise<{ error: string
         },
       },
     },
-    orderBy: [{ courseId: "asc" }],
+    orderBy: [{ course: { name: "asc" } }],
   });
-
-  const { specialty, ...studentData } = user.student;
 
   return {
     data: {
-      student: { ...studentData, specialty: specialty.name, faculty: specialty.faculty.name },
+      student: {
+        ...user.student,
+        year: studentSemester.group.year,
+        group: studentSemester.group.number,
+        specialty: studentSemester.group.specialty.name,
+        faculty: studentSemester.group.specialty.faculty.name,
+      },
       semester: currentSemester,
-      courses: enrollments.map(({ course }) => {
+      courses: courseGroups.map(({ course }) => {
         const { academicStaff, schedules, ...courseData } = course;
         return {
           ...courseData,

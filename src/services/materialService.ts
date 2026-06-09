@@ -15,7 +15,6 @@ function extractFileType(originalName: string): string {
 }
 
 export async function uploadMaterial(input: UploadMaterialInput) {
-  // Ownership guard: staff can only upload to courses they teach
   const course = await prisma.course.findFirst({
     where: { id: input.courseId, academicStaffId: input.academicStaffId },
   });
@@ -37,16 +36,14 @@ export async function uploadMaterial(input: UploadMaterialInput) {
   });
 }
 
-// Staff: list all courses they are assigned to (all semesters) for the upload dropdown
 export async function getCoursesForStaff(academicStaffId: number) {
   return prisma.course.findMany({
     where: { academicStaffId },
-    orderBy: [{ year: "asc" }, { semester: "asc" }, { name: "asc" }],
-    select: { id: true, code: true, name: true, year: true, semester: true },
+    orderBy: [{ name: "asc" }],
+    select: { id: true, code: true, name: true },
   });
 }
 
-// Staff: list all materials they have uploaded across all courses
 export async function getMaterialsByStaff(academicStaffId: number) {
   return prisma.material.findMany({
     where: { academicStaffId },
@@ -63,7 +60,6 @@ export async function getMaterialsByStaff(academicStaffId: number) {
   });
 }
 
-// Staff: delete own material (ownership enforced)
 export async function deleteMaterial(
   materialId: number,
   academicStaffId: number,
@@ -72,14 +68,14 @@ export async function deleteMaterial(
   if (!material) {
     return { error: "Material not found", status: 404 };
   }
-  if (material.academicStaffId !== academicStaffId)
+  if (material.academicStaffId !== academicStaffId) {
     return { error: "You can only delete your own materials", status: 403 };
+  }
 
   await prisma.material.delete({ where: { id: materialId } });
   return { success: true };
 }
 
-// Shared: list materials for a single course
 export async function getMaterialsForCourse(courseId: number) {
   return prisma.material.findMany({
     where: { courseId },
@@ -98,41 +94,57 @@ export async function getMaterialsForCourse(courseId: number) {
   });
 }
 
-// Student: list all courses with materials for the student's specialty (all semesters/years)
 export async function getCoursesWithMaterialsForStudent(studentId: number) {
-  const student = await prisma.student.findUnique({
-    where: { id: studentId },
-    select: { specialtyId: true },
+  const currentSemester = await prisma.semester.findFirst({
+    where: { isCurrent: true },
+    orderBy: [{ startDate: "desc" }],
+    select: { id: true },
   });
 
-  if (!student) {
-    return null;
-  }
+  if (!currentSemester) return null;
 
-  const courses = await prisma.course.findMany({
-    where: { specialtyId: student.specialtyId },
-    orderBy: [{ year: "asc" }, { semester: "asc" }, { name: "asc" }],
+  const studentSemester = await prisma.studentSemester.findUnique({
+    where: { studentId_semesterId: { studentId, semesterId: currentSemester.id } },
+    select: { groupId: true, curriculumSemester: true },
+  });
+
+  if (!studentSemester) return null;
+
+  const courseGroups = await prisma.courseGroup.findMany({
+    where: {
+      groupId: studentSemester.groupId,
+      curriculumSemester: studentSemester.curriculumSemester,
+    },
+    orderBy: [{ course: { name: "asc" } }],
     select: {
-      id: true,
-      code: true,
-      name: true,
-      year: true,
-      semester: true,
-      type: true,
-      academicStaff: { select: { firstName: true, lastName: true, title: true } },
-      materials: {
-        orderBy: { uploadedAt: "desc" },
+      curriculumSemester: true,
+      course: {
         select: {
           id: true,
-          title: true,
-          description: true,
-          fileUrl: true,
-          fileType: true,
-          uploadedAt: true,
+          code: true,
+          name: true,
+          type: true,
+          academicStaff: { select: { firstName: true, lastName: true, title: true } },
+          materials: {
+            orderBy: { uploadedAt: "desc" },
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              fileUrl: true,
+              fileType: true,
+              uploadedAt: true,
+            },
+          },
         },
       },
     },
   });
+
+  const courses = courseGroups.map(({ curriculumSemester, course }) => ({
+    ...course,
+    semester: curriculumSemester,
+  }));
 
   return { courses };
 }

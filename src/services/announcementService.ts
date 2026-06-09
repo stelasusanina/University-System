@@ -2,7 +2,7 @@ import { prisma } from "../prisma.ts";
 
 export async function createAnnouncement(
   userId: number,
-  body: { message: string; type?: string; validTo: string; courseId?: number; specialtyId: number; year: number; group?: number },
+  body: { message: string; type?: string; validTo: string; courseId?: number; groupId?: number },
 ): Promise<{ error: string; status: number } | { data: Record<string, unknown>; status: number }> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -30,9 +30,7 @@ export async function createAnnouncement(
       validTo: new Date(body.validTo),
       academicStaffId: user.academicStaff.id,
       courseId: body.courseId ?? null,
-      specialtyId: body.specialtyId,
-      year: body.year,
-      group: body.group ?? null,
+      groupId: body.groupId ?? null,
       semesterId: currentSemester.id,
     },
     select: {
@@ -42,9 +40,7 @@ export async function createAnnouncement(
       validTo: true,
       createdAt: true,
       course: { select: { code: true, name: true } },
-      specialty: { select: { name: true } },
-      year: true,
-      group: true,
+      group: { select: { number: true, year: true, specialty: { select: { name: true } } } },
     },
   });
 
@@ -57,7 +53,7 @@ export async function getAnnouncementsForUser(
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
-      student: { select: { specialtyId: true, year: true, group: true } },
+      student: { select: { id: true } },
       academicStaff: { select: { id: true } },
     },
   });
@@ -69,12 +65,26 @@ export async function getAnnouncementsForUser(
   const now = new Date();
 
   if (user.student) {
+    const currentSemester = await prisma.semester.findFirst({
+      where: { isCurrent: true },
+      orderBy: [{ startDate: "desc" }],
+      select: { id: true },
+    });
+
+    const studentSemester = currentSemester
+      ? await prisma.studentSemester.findUnique({
+          where: { studentId_semesterId: { studentId: user.student.id, semesterId: currentSemester.id } },
+          select: { groupId: true },
+        })
+      : null;
+
     const announcements = await prisma.announcement.findMany({
       where: {
-        specialtyId: user.student.specialtyId,
-        year: user.student.year,
-        OR: [{ group: null }, { group: user.student.group }],
         validTo: { gte: now },
+        OR: [
+          { groupId: null },
+          ...(studentSemester ? [{ groupId: studentSemester.groupId }] : []),
+        ],
       },
       select: {
         id: true,
@@ -104,9 +114,7 @@ export async function getAnnouncementsForUser(
         validTo: true,
         createdAt: true,
         course: { select: { code: true, name: true } },
-        specialty: { select: { name: true } },
-        year: true,
-        group: true,
+        group: { select: { number: true, year: true, specialty: { select: { name: true } } } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -120,7 +128,7 @@ export async function getAnnouncementsForUser(
 export async function updateAnnouncement(
   userId: number,
   announcementId: number,
-  body: { message?: string; type?: string; validTo?: string; courseId?: number | null; specialtyId?: number; year?: number; group?: number | null },
+  body: { message?: string; type?: string; validTo?: string; courseId?: number | null; groupId?: number | null },
 ): Promise<{ error: string; status: number } | { data: Record<string, unknown> }> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -151,9 +159,7 @@ export async function updateAnnouncement(
       ...(body.type !== undefined && { type: body.type as any }),
       ...(body.validTo !== undefined && { validTo: new Date(body.validTo) }),
       ...(body.courseId !== undefined && { courseId: body.courseId }),
-      ...(body.specialtyId !== undefined && { specialtyId: body.specialtyId }),
-      ...(body.year !== undefined && { year: body.year }),
-      ...(body.group !== undefined && { group: body.group }),
+      ...(body.groupId !== undefined && { groupId: body.groupId }),
     },
     select: {
       id: true,
@@ -162,9 +168,7 @@ export async function updateAnnouncement(
       validTo: true,
       createdAt: true,
       course: { select: { code: true, name: true } },
-      specialty: { select: { name: true } },
-      year: true,
-      group: true,
+      group: { select: { number: true, year: true, specialty: { select: { name: true } } } },
     },
   });
 
@@ -215,16 +219,27 @@ export async function getStaffFormOptions(
 
   const courses = await prisma.course.findMany({
     where: { academicStaffId: user.academicStaff.id },
-    select: { id: true, code: true, name: true, specialtyId: true },
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      courseGroups: {
+        select: {
+          id: true,
+          curriculumSemester: true,
+          group: { select: { id: true, number: true, year: true, specialtyId: true } },
+        },
+      },
+    },
     orderBy: { name: "asc" },
   });
 
-  const specialtyIds = [...new Set(courses.map((c) => c.specialtyId))];
-  const specialties = await prisma.specialty.findMany({
-    where: { id: { in: specialtyIds } },
-    select: { id: true, name: true, years: true },
-    orderBy: { name: "asc" },
+  const groupIds = [...new Set(courses.flatMap((c) => c.courseGroups.map((cg) => cg.group.id)))];
+  const groups = await prisma.group.findMany({
+    where: { id: { in: groupIds } },
+    select: { id: true, number: true, year: true, specialty: { select: { id: true, name: true } } },
+    orderBy: [{ year: "asc" }, { number: "asc" }],
   });
 
-  return { data: { courses, specialties } };
+  return { data: { courses, groups } };
 }

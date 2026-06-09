@@ -1,38 +1,45 @@
-export interface CourseRow {
+export interface GradeEntry {
   id: number;
-  code: string;
-  name: string;
-  year: number;
-  semester: number;
-  _count: { enrollments: number };
-}
-
-export interface EnrollmentRow {
-  id: number;
-  grade: number | null;
-  student: {
+  finalGrade: number;
+  course: {
     id: number;
-    facultyNumber: string;
-    firstName: string;
-    lastName: string;
-    year: number;
-    group: number;
+    code: string;
+    name: string;
+    credits: number;
+    type: string;
+    academicStaff: { firstName: string; lastName: string; title: string };
   };
 }
 
 export interface SemesterGrades {
   semester: { id: number; name: string; period: string };
-  enrollments: {
-    id: number;
-    grade: number | null;
-    course: {
-      id: number;
-      code: string;
-      name: string;
-      credits: number;
-      year: number;
-      semester: number;
-      academicStaff: { firstName: string; lastName: string; title: string };
-    };
-  }[];
+  curriculumSemester: number;
+  group: { number: number; year: number; specialty: { name: string } };
+  grades: GradeEntry[];
+}
+
+export interface StudentGrades {
+  semesters: SemesterGrades[];
+}
+
+export interface StudentRow {
+  id: number;
+  facultyNumber: string;
+  firstName: string;
+  lastName: string;
+  grade: { id: number; finalGrade: number } | null;
+}
+
+export interface CourseGroupRow {
+  id: number;
+  curriculumSemester: number;
+  group: { id: number; number: number; year: number; specialty: { name: string } };
+  _count: { grades: number };
+}
+
+export interface CourseWithGroups {
+  id: number;
+  code: string;
+  name: string;
+  courseGroups: CourseGroupRow[];
 }

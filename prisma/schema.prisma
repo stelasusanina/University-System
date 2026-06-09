@@ -8,30 +8,30 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique @db.VarChar(200)
-  password  String   @db.VarChar(255)
-  role      UserRole
-  studentId Int?     @unique
-  academicStaffId Int?   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  email           String   @unique @db.VarChar(200)
+  password        String   @db.VarChar(255)
+  role            UserRole
+  studentId       Int?     @unique
+  academicStaffId Int?     @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  student   Student?   @relation(fields: [studentId], references: [id])
+  student       Student?       @relation(fields: [studentId], references: [id])
   academicStaff AcademicStaff? @relation(fields: [academicStaffId], references: [id])
-  pushTokens PushToken[]
+  pushTokens    PushToken[]
 }
 
 model Faculty {
-  id          Int         @id @default(autoincrement())
-  name        String      @unique @db.VarChar(200)
-  code        String      @unique @db.VarChar(10)
-  description String?     @db.Text
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(200)
+  code        String   @unique @db.VarChar(10)
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  specialties Specialty[]
-  academicStaffMembers  AcademicStaff[]
+  specialties          Specialty[]
+  academicStaffMembers AcademicStaff[]
 }
 
 model Specialty {
@@ -44,11 +44,26 @@ model Specialty {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  faculty  Faculty   @relation(fields: [facultyId], references: [id])
-  students Student[]
-  courses  Course[]
-  events   Event[]
+  faculty Faculty @relation(fields: [facultyId], references: [id])
+
+  groups Group[]
+}
+
+model Group {
+  id          Int @id @default(autoincrement())
+  number      Int
+  year        Int
+  specialtyId Int
+
+  specialty Specialty @relation(fields: [specialtyId], references: [id])
+
+  students      Student[]
+  semesters     StudentSemester[]
+  courseGroups  CourseGroup[]
+  events        Event[]
   announcements Announcement[]
+
+  @@unique([number, year, specialtyId])
 }
 
 model Student {
@@ -57,37 +72,50 @@ model Student {
   firstName     String   @db.VarChar(100)
   lastName      String   @db.VarChar(100)
   phone         String?  @db.VarChar(20)
-  year          Int
-  group         Int      @default(1)
-  status        StudentStatus @default(ACTIVE)
-  specialtyId   Int
+  groupId       Int
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  specialty   Specialty    @relation(fields: [specialtyId], references: [id])
-  enrollments Enrollment[]
-  user        User?
+  group     Group     @relation(fields: [groupId], references: [id])
+  semesters StudentSemester[]
+  grades    Grade[]
+
+  user User?
+}
+
+model StudentSemester {
+  id         Int @id @default(autoincrement())
+  studentId  Int
+  groupId    Int
+  semesterId Int
+
+  status StudentStatus @default(ACTIVE)
+
+  student  Student  @relation(fields: [studentId], references: [id])
+  group    Group    @relation(fields: [groupId], references: [id])
+  semester Semester @relation(fields: [semesterId], references: [id])
+
+  @@unique([studentId, semesterId])
 }
 
 model AcademicStaff {
-  id          Int      @id @default(autoincrement())
-  staffNumber String   @unique @db.VarChar(20)
-  firstName   String   @db.VarChar(100)
-  lastName    String   @db.VarChar(100)
-  phone       String?  @db.VarChar(20)
+  id          Int           @id @default(autoincrement())
+  staffNumber String        @unique @db.VarChar(20)
+  firstName   String        @db.VarChar(100)
+  lastName    String        @db.VarChar(100)
+  phone       String?       @db.VarChar(20)
   title       AcademicTitle @default(ASSISTANT)
   facultyId   Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
-  faculty   Faculty    @relation(fields: [facultyId], references: [id])
-  courses   Course[]
-  schedules Schedule[]
-  channels  Channel[]
-  events    Event[]
+  faculty       Faculty        @relation(fields: [facultyId], references: [id])
+  courses       Course[]
+  schedules     Schedule[]
+  events        Event[]
   announcements Announcement[]
   materials     Material[]
-  user      User?
+  user          User?
 }
 
 model Course {
@@ -96,72 +124,78 @@ model Course {
   code        String     @unique @db.VarChar(20)
   description String?    @db.Text
   credits     Int
-  year        Int
-  semester    Int
   type        CourseType @default(MANDATORY)
-  specialtyId Int
   academicStaffId Int
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  specialty   Specialty    @relation(fields: [specialtyId], references: [id])
-  academicStaff   AcademicStaff    @relation(fields: [academicStaffId], references: [id])
-  enrollments Enrollment[]
-  schedules   Schedule[]
-  channels    Channel[]
-  events      Event[]
+  academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
+
+  courseGroups  CourseGroup[]
+  schedules     Schedule[]
+  events        Event[]
   announcements Announcement[]
   materials     Material[]
 }
 
+model CourseGroup {
+  id                 Int @id @default(autoincrement())
+  courseId           Int
+  groupId            Int
+  curriculumSemester Int
+
+  course Course @relation(fields: [courseId], references: [id])
+  group  Group  @relation(fields: [groupId], references: [id])
+
+  grades Grade[]
+
+  @@unique([courseId, groupId])
+}
+
+model Grade {
+  id            Int   @id @default(autoincrement())
+  studentId     Int
+  courseGroupId Int
+  finalGrade    Float
+
+  student     Student     @relation(fields: [studentId], references: [id])
+  courseGroup CourseGroup @relation(fields: [courseGroupId], references: [id])
+
+  @@unique([studentId, courseGroupId])
+}
+
 model Semester {
-  id        Int          @id @default(autoincrement())
-  name      String       @db.VarChar(50)
+  id        Int            @id @default(autoincrement())
+  name      String         @db.VarChar(50)
   period    SemesterPeriod
   startDate DateTime
   endDate   DateTime
-  isCurrent Boolean      @default(false)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  isCurrent Boolean        @default(false)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
-  enrollments Enrollment[]
-  schedules   Schedule[]
-  events      Event[]
-  announcements Announcement[]
-}
-
-model Enrollment {
-  id         Int              @id @default(autoincrement())
-  studentId  Int
-  courseId   Int
-  semesterId Int
-  grade      Float?
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-
-  student  Student  @relation(fields: [studentId], references: [id])
-  course   Course   @relation(fields: [courseId], references: [id])
-  semester Semester @relation(fields: [semesterId], references: [id])
-
-  @@unique([studentId, courseId, semesterId])
+  studentSemesters StudentSemester[]
+  schedules        Schedule[]
+  events           Event[]
+  announcements    Announcement[]
 }
 
 model Schedule {
-  id          Int      @id @default(autoincrement())
-  courseId    Int
+  id              Int        @id @default(autoincrement())
+  courseId        Int
   academicStaffId Int
-  semesterId  Int
-  dayOfWeek   DayOfWeek
-  startTime   String   @db.VarChar(5)
-  endTime     String   @db.VarChar(5)
-  room        String   @db.VarChar(50)
-  type        LessonType @default(ЛЕКЦИЯ)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  semesterId      Int
+  dayOfWeek       DayOfWeek
+  startTime       String     @db.VarChar(5)
+  endTime         String     @db.VarChar(5)
+  room            String     @db.VarChar(50)
+  type            LessonType @default(ЛЕКЦИЯ)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
-  course    Course    @relation(fields: [courseId], references: [id])
+  course        Course        @relation(fields: [courseId], references: [id])
   academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
-  semester  Semester  @relation(fields: [semesterId], references: [id])
+  semester      Semester      @relation(fields: [semesterId], references: [id])
 }
 
 model Building {
@@ -176,36 +210,21 @@ model Building {
   updatedAt     DateTime @updatedAt
 }
 
-model Channel {
-  id          Int      @id @default(autoincrement())
-  name        String   @db.VarChar(200)
-  description String?  @db.Text
-  courseId     Int?
-  academicStaffId Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  course        Course?        @relation(fields: [courseId], references: [id])
-  academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
-}
-
 model Announcement {
   id              Int              @id @default(autoincrement())
   message         String           @db.Text
   type            AnnouncementType @default(ИНФОРМАЦИЯ)
   validTo         DateTime
   academicStaffId Int
-  courseId         Int?
-  specialtyId     Int
-  year            Int
-  group           Int?
+  courseId        Int?
+  groupId         Int?
   semesterId      Int
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
   academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
   course        Course?       @relation(fields: [courseId], references: [id])
-  specialty     Specialty     @relation(fields: [specialtyId], references: [id])
+  group         Group?        @relation(fields: [groupId], references: [id])
   semester      Semester      @relation(fields: [semesterId], references: [id])
 }
 
@@ -231,18 +250,16 @@ model Event {
   startTime       String?   @db.VarChar(5)
   endTime         String?   @db.VarChar(5)
   room            String?   @db.VarChar(50)
-  courseId         Int
+  courseId        Int
   academicStaffId Int
-  specialtyId     Int
-  year            Int
-  group           Int?
+  groupId         Int?
   semesterId      Int
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   course        Course        @relation(fields: [courseId], references: [id])
   academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
-  specialty     Specialty     @relation(fields: [specialtyId], references: [id])
+  group         Group?        @relation(fields: [groupId], references: [id])
   semester      Semester      @relation(fields: [semesterId], references: [id])
 }
 
@@ -300,7 +317,6 @@ enum SemesterPeriod {
   WINTER
   SUMMER
 }
-
 
 enum DayOfWeek {
   ПОНЕДЕЛНИК
