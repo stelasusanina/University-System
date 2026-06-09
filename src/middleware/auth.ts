@@ -39,14 +39,3 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
     return res.status(401).json({ error: "Invalid or expired token" });
   }
 }
-
-export function authorize(...roles: string[]) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const authenticatedReq = req as AuthenticatedRequest;
-
-    if (!roles.includes(authenticatedReq.user.role)) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-    next();
-  };
-}

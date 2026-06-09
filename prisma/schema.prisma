@@ -52,7 +52,7 @@ model Specialty {
 model Group {
   id          Int @id @default(autoincrement())
   number      Int
-  year        Int
+  studyYear   Int
   specialtyId Int
 
   specialty Specialty @relation(fields: [specialtyId], references: [id])
@@ -60,10 +60,11 @@ model Group {
   students      Student[]
   semesters     StudentSemester[]
   courseGroups  CourseGroup[]
+  schedules     Schedule[]
   events        Event[]
   announcements Announcement[]
 
-  @@unique([number, year, specialtyId])
+  @@unique([number, studyYear, specialtyId])
 }
 
 model Student {
@@ -85,14 +86,13 @@ model Student {
 
 model StudentSemester {
   id         Int @id @default(autoincrement())
+
   studentId  Int
-  groupId    Int
   semesterId Int
 
   status StudentStatus @default(ACTIVE)
 
   student  Student  @relation(fields: [studentId], references: [id])
-  group    Group    @relation(fields: [groupId], references: [id])
   semester Semester @relation(fields: [semesterId], references: [id])
 
   @@unique([studentId, semesterId])
@@ -126,8 +126,6 @@ model Course {
   credits     Int
   type        CourseType @default(MANDATORY)
   academicStaffId Int
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
 
   academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
 
@@ -171,8 +169,6 @@ model Semester {
   startDate DateTime
   endDate   DateTime
   isCurrent Boolean        @default(false)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
 
   studentSemesters StudentSemester[]
   schedules        Schedule[]
@@ -182,20 +178,31 @@ model Semester {
 
 model Schedule {
   id              Int        @id @default(autoincrement())
+
   courseId        Int
   academicStaffId Int
   semesterId      Int
+  groupId         Int
+
   dayOfWeek       DayOfWeek
   startTime       String     @db.VarChar(5)
   endTime         String     @db.VarChar(5)
   room            String     @db.VarChar(50)
   type            LessonType @default(ЛЕКЦИЯ)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
 
   course        Course        @relation(fields: [courseId], references: [id])
   academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
   semester      Semester      @relation(fields: [semesterId], references: [id])
+  group         Group         @relation(fields: [groupId], references: [id])
+
+  @@index([groupId])
+
+  @@unique([
+    groupId,
+    semesterId,
+    dayOfWeek,
+    startTime
+  ])
 }
 
 model Building {
@@ -206,8 +213,6 @@ model Building {
   latitude      Float
   longitude     Float
   googleMapsUrl String?  @db.VarChar(1000)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
 }
 
 model Announcement {

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { authService } from "../services/authService";
+import { api } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import blueLogo from "@shared/assets/blue_logo.png";
 
@@ -28,7 +28,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await authService.register({
+      const response = await api.register({
         email,
         identifierNumber,
         firstName,

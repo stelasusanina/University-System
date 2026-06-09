@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
-import type { CourseRow, EnrollmentRow, SemesterGrades } from "@shared/types/grades";
+import type { CourseWithGroups, StudentRow, SemesterGrades, GradeEntry } from "@shared/types/grades";
 import Navbar from "../components/Navbar";
 
 const STAFF_ROLES = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
 
-function gradeColor(grade: number | null) {
-  if (grade === null) return "";
+function gradeColor(grade: number) {
   if (grade >= 5) return "grade-excellent";
   if (grade >= 4) return "grade-good";
   if (grade >= 3) return "grade-average";
@@ -15,56 +14,60 @@ function gradeColor(grade: number | null) {
 }
 
 function StaffGradesView() {
-  const [courses, setCourses] = useState<CourseRow[]>([]);
+  const [courses, setCourses] = useState<CourseWithGroups[]>([]);
   const [semesterName, setSemesterName] = useState("");
   const [openCourse, setOpenCourse] = useState<number | null>(null);
-  const [enrollments, setEnrollments] = useState<Record<number, EnrollmentRow[]>>({});
-  const [loadingCourse, setLoadingCourse] = useState<number | null>(null);
-  const [saving, setSaving] = useState<number | null>(null);
-  const [editGrade, setEditGrade] = useState<Record<number, string>>({});
+  const [openCourseGroup, setOpenCourseGroup] = useState<number | null>(null);
+  const [students, setStudents] = useState<Record<number, StudentRow[]>>({});
+  const [loadingGroup, setLoadingGroup] = useState<number | null>(null);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [editGrade, setEditGrade] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get<{ semester: { name: string }; courses: CourseRow[] }>("/grades/courses")
+    api.get<{ semester: { name: string }; courses: CourseWithGroups[] }>("/grades/courses")
       .then((res) => { setSemesterName(res.semester.name); setCourses(res.courses); })
       .catch(() => setError("Неуспешно зареждане на дисциплини"))
       .finally(() => setLoading(false));
   }, []);
 
-  async function openCourseGrades(courseId: number) {
-    if (openCourse === courseId) { setOpenCourse(null); return; }
-    setOpenCourse(courseId);
-    if (enrollments[courseId]) return; // already loaded
-    setLoadingCourse(courseId);
+  async function openGroup(courseGroupId: number) {
+    if (openCourseGroup === courseGroupId) { setOpenCourseGroup(null); return; }
+    setOpenCourseGroup(courseGroupId);
+    if (students[courseGroupId]) return;
+    setLoadingGroup(courseGroupId);
     try {
-      const res = await api.get<{ enrollments: EnrollmentRow[] }>(`/grades/course/${courseId}`);
-      setEnrollments((prev) => ({ ...prev, [courseId]: res.enrollments }));
-      const gradeInit: Record<number, string> = {};
-      for (const e of res.enrollments) {
-        gradeInit[e.id] = e.grade !== null ? String(e.grade) : "";
+      const res = await api.get<{ students: StudentRow[] }>(`/grades/course-group/${courseGroupId}`);
+      setStudents((prev) => ({ ...prev, [courseGroupId]: res.students }));
+      const init: Record<string, string> = {};
+      for (const s of res.students) {
+        init[`${s.id}-${courseGroupId}`] = s.grade?.finalGrade != null ? String(s.grade.finalGrade) : "";
       }
-      setEditGrade((prev) => ({ ...prev, ...gradeInit }));
+      setEditGrade((prev) => ({ ...prev, ...init }));
     } catch {
-      setError("Неуспешно зареждане на записванията");
+      setError("Неуспешно зареждане на студенти");
     } finally {
-      setLoadingCourse(null);
+      setLoadingGroup(null);
     }
   }
 
-  async function handleSave(enrollmentId: number) {
-    setSaving(enrollmentId);
+  async function handleSave(studentId: number, courseGroupId: number) {
+    const key = `${studentId}-${courseGroupId}`;
+    setSaving(key);
     setError("");
     try {
-      const gradeStr = editGrade[enrollmentId];
+      const gradeStr = editGrade[key];
       const grade = gradeStr !== "" ? parseFloat(gradeStr) : null;
-      const updated = await api.put<EnrollmentRow>(`/grades/enrollment/${enrollmentId}`, { grade });
-
-      // patch local state
-      setEnrollments((prev) => {
+      await api.put("/grades/", { studentId, courseGroupId, grade });
+      setStudents((prev) => {
         const next = { ...prev };
-        for (const [cid, list] of Object.entries(next)) {
-          next[Number(cid)] = list.map((e) => e.id === enrollmentId ? { ...e, grade: updated.grade } : e);
+        if (next[courseGroupId]) {
+          next[courseGroupId] = next[courseGroupId].map((s) =>
+            s.id === studentId
+              ? { ...s, grade: grade !== null ? { id: s.grade?.id ?? 0, finalGrade: grade } : null }
+              : s,
+          );
         }
         return next;
       });
@@ -92,87 +95,90 @@ function StaffGradesView() {
             <button
               type="button"
               className="accordion-trigger"
-              onClick={() => openCourseGrades(course.id)}
+              onClick={() => setOpenCourse((prev) => (prev === course.id ? null : course.id))}
             >
               <span className="accordion-course-code">{course.code}</span>
               <span className="accordion-course-name">{course.name}</span>
-              <span className="accordion-meta">Курс {course.year} · Сем {course.semester}</span>
-              <span className="accordion-count">{course._count.enrollments} студенти</span>
+              <span className="accordion-count">{course.courseGroups.length} групи</span>
               <span className="accordion-chevron">{openCourse === course.id ? "▲" : "▼"}</span>
             </button>
 
             {openCourse === course.id && (
               <div className="accordion-body">
-                {loadingCourse === course.id && <p className="loading-text">Зареждане на студенти…</p>}
+                {course.courseGroups.map((cg) => (
+                  <div key={cg.id} className="accordion-item">
+                    <button
+                      type="button"
+                      className="accordion-trigger"
+                      onClick={() => openGroup(cg.id)}
+                    >
+                      <span className="accordion-course-name">
+                        {cg.group.specialty.name} · Курс {cg.group.year} · Група {cg.group.number}
+                      </span>
+                      <span className="accordion-meta">Сем. {cg.curriculumSemester}</span>
+                      <span className="accordion-count">{cg._count.grades} оценки</span>
+                      <span className="accordion-chevron">{openCourseGroup === cg.id ? "▲" : "▼"}</span>
+                    </button>
 
-                {enrollments[course.id] && enrollments[course.id].length === 0 && (
-                  <p className="empty-text">Няма записани студенти.</p>
-                )}
+                    {openCourseGroup === cg.id && (
+                      <div className="accordion-body">
+                        {loadingGroup === cg.id && <p className="loading-text">Зареждане на студенти…</p>}
 
-                {enrollments[course.id] && enrollments[course.id].length > 0 && (() => {
-                  // group students by their group number
-                  const byGroup = new Map<number, EnrollmentRow[]>();
-                  for (const e of enrollments[course.id]) {
-                    const g = e.student.group;
-                    if (!byGroup.has(g)) byGroup.set(g, []);
-                    byGroup.get(g)!.push(e);
-                  }
-                  const sortedGroups = Array.from(byGroup.keys()).sort((a, b) => a - b);
+                        {students[cg.id] && students[cg.id].length === 0 && (
+                          <p className="empty-text">Няма записани студенти.</p>
+                        )}
 
-                  return (
-                  <table className="grades-table">
-                    <thead>
-                      <tr>
-                        <th>Фак. №</th>
-                        <th>Име</th>
-                        <th>Курс</th>
-                        <th>Оценка</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sortedGroups.map((group) => (
-                        <>
-                          <tr key={`group-${group}`} className="grades-group-header-row">
-                            <td colSpan={5}>Група {group}</td>
-                          </tr>
-                          {byGroup.get(group)!.map((e) => (
-                            <tr key={e.id}>
-                              <td className="grade-faculty-num">{e.student.facultyNumber}</td>
-                              <td>{e.student.firstName} {e.student.lastName}</td>
-                              <td>{e.student.year}</td>
-                              <td>
-                                <input
-                                  className="grade-input"
-                                  type="number"
-                                  min={2}
-                                  max={6}
-                                  step={0.5}
-                                  placeholder="—"
-                                  value={editGrade[e.id] ?? ""}
-                                  onChange={(ev) =>
-                                    setEditGrade((prev) => ({ ...prev, [e.id]: ev.target.value }))
-                                  }
-                                />
-                              </td>
-                              <td>
-                                <button
-                                  type="button"
-                                  className="btn-primary grade-save-btn"
-                                  disabled={saving === e.id}
-                                  onClick={() => handleSave(e.id)}
-                                >
-                                  {saving === e.id ? "…" : "Запази"}
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </>
-                      ))}
-                    </tbody>
-                  </table>
-                  );
-                })()}
+                        {students[cg.id] && students[cg.id].length > 0 && (
+                          <table className="grades-table">
+                            <thead>
+                              <tr>
+                                <th>Фак. №</th>
+                                <th>Ime</th>
+                                <th>Оценка</th>
+                                <th></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {students[cg.id].map((s) => {
+                                const key = `${s.id}-${cg.id}`;
+                                return (
+                                  <tr key={s.id}>
+                                    <td className="grade-faculty-num">{s.facultyNumber}</td>
+                                    <td>{s.firstName} {s.lastName}</td>
+                                    <td>
+                                      <input
+                                        className="grade-input"
+                                        type="number"
+                                        min={2}
+                                        max={6}
+                                        step={0.5}
+                                        placeholder="—"
+                                        value={editGrade[key] ?? ""}
+                                        onChange={(ev) =>
+                                          setEditGrade((prev) => ({ ...prev, [key]: ev.target.value }))
+                                        }
+                                      />
+                                    </td>
+                                    <td>
+                                      <button
+                                        type="button"
+                                        className="btn-primary grade-save-btn"
+                                        disabled={saving === key}
+                                        onClick={() => handleSave(s.id, cg.id)}
+                                      >
+                                        {saving === key ? "…" : "Запази"}
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -204,10 +210,9 @@ function StudentGradesView() {
       )}
 
       {semesters.map((sg) => {
-        const graded = sg.enrollments.filter((e) => e.grade !== null);
         const avg =
-          graded.length > 0
-            ? (graded.reduce((s, e) => s + e.grade!, 0) / graded.length).toFixed(2)
+          sg.grades.length > 0
+            ? (sg.grades.reduce((s, e) => s + e.finalGrade, 0) / sg.grades.length).toFixed(2)
             : null;
 
         return (
@@ -228,15 +233,15 @@ function StudentGradesView() {
                 </tr>
               </thead>
               <tbody>
-                {sg.enrollments.map((e) => (
+                {sg.grades.map((e: GradeEntry) => (
                   <tr key={e.id}>
                     <td><span className="accordion-course-code">{e.course.code}</span></td>
                     <td>{e.course.name}</td>
                     <td>{e.course.credits}</td>
                     <td>{e.course.academicStaff.title} {e.course.academicStaff.lastName}</td>
                     <td>
-                      <span className={`grade-value ${gradeColor(e.grade)}`}>
-                        {e.grade !== null ? e.grade : "—"}
+                      <span className={`grade-value ${gradeColor(e.finalGrade)}`}>
+                        {e.finalGrade}
                       </span>
                     </td>
                   </tr>
@@ -249,8 +254,6 @@ function StudentGradesView() {
     </div>
   );
 }
-
-// ── Page shell ────────────────────────────────────────────────────────────────
 
 export default function GradesPage() {
   const { user } = useAuth();
