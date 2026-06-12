@@ -1,5 +1,5 @@
 import { prisma } from "../prisma.ts";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "../../generated/prisma/client.ts";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import type { StringValue } from "ms";

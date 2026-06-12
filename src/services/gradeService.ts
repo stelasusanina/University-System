@@ -6,38 +6,33 @@ export async function getCoursesWithStudents(
   const currentSemester = await prisma.semester.findFirst({
     where: { isCurrent: true },
     orderBy: [{ startDate: "desc" }],
-    select: { id: true, name: true },
+    select: { id: true, academicYear: true },
   });
   if (!currentSemester) {
     return { error: "No active semester found", status: 404 };
   }
 
-  const courses = await prisma.course.findMany({
-    where: {
-      academicStaffId,
-      schedules: { some: { semesterId: currentSemester.id } },
-    },
-    orderBy: [{ name: "asc" }],
+  const courseGroups = await prisma.courseGroup.findMany({
+    where: { academicStaffId, semesterId: currentSemester.id },
+    orderBy: [{ course: { name: "asc" } }],
     select: {
       id: true,
-      code: true,
-      name: true,
-      courseGroups: {
-        select: {
-          id: true,
-          curriculumSemester: true,
-          group: { select: { id: true, number: true, year: true, specialty: { select: { name: true } } } },
-          _count: {
-            select: {
-              grades: true,
-            },
-          },
-        },
-      },
+      semesterNum: true,
+      course: { select: { id: true, code: true, name: true } },
+      group: { select: { id: true, number: true, studyYear: true, specialty: { select: { name: true } } } },
+      _count: { select: { grades: true } },
     },
   });
 
-  return { data: { semester: currentSemester, courses } };
+  const coursesMap = new Map<number, { id: number; code: string; name: string; courseGroups: typeof courseGroups }>();
+  for (const cg of courseGroups) {
+    if (!coursesMap.has(cg.course.id)) {
+      coursesMap.set(cg.course.id, { ...cg.course, courseGroups: [] });
+    }
+    coursesMap.get(cg.course.id)!.courseGroups.push(cg);
+  }
+
+  return { data: { semester: { ...currentSemester, name: currentSemester.academicYear }, courses: Array.from(coursesMap.values()) } };
 }
 
 export async function getStudentsForCourseGroup(
@@ -48,63 +43,55 @@ export async function getStudentsForCourseGroup(
     where: { id: courseGroupId },
     select: {
       id: true,
-      curriculumSemester: true,
-      course: { select: { id: true, code: true, name: true, academicStaffId: true } },
-      group: { select: { id: true, number: true, year: true } },
+      semesterNum: true,
+      academicStaffId: true,
+      course: { select: { id: true, code: true, name: true } },
+      group: { select: { id: true, number: true, studyYear: true } },
     },
   });
 
   if (!courseGroup) {
     return { error: "CourseGroup not found", status: 404 };
   }
-  if (courseGroup.course.academicStaffId !== academicStaffId) {
+  if (courseGroup.academicStaffId !== academicStaffId) {
     return { error: "You are not the lecturer for this course", status: 403 };
   }
 
   const currentSemester = await prisma.semester.findFirst({
     where: { isCurrent: true },
     orderBy: [{ startDate: "desc" }],
-    select: { id: true, name: true },
+    select: { id: true, academicYear: true },
   });
   if (!currentSemester) {
     return { error: "No active semester found", status: 404 };
   }
 
-  const studentSemesters = await prisma.studentSemester.findMany({
-    where: {
-      groupId: courseGroup.group.id,
-      semesterId: currentSemester.id,
-    },
-    orderBy: [{ student: { lastName: "asc" } }, { student: { firstName: "asc" } }],
+  const students = await prisma.student.findMany({
+    where: { groupId: courseGroup.group.id },
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     select: {
-      student: {
-        select: {
-          id: true,
-          facultyNumber: true,
-          firstName: true,
-          lastName: true,
-          grades: {
-            where: { courseGroupId },
-            select: { id: true, finalGrade: true },
-          },
-        },
+      id: true,
+      facultyNumber: true,
+      firstName: true,
+      lastName: true,
+      grades: {
+        where: { courseGroupId },
+        select: { id: true, finalGrade: true },
       },
     },
   });
 
-  const students = studentSemesters.map(({ student }) => ({
-    id: student.id,
-    facultyNumber: student.facultyNumber,
-    firstName: student.firstName,
-    lastName: student.lastName,
-    grade: student.grades[0] ?? null,
-  }));
-
   return {
     data: {
       courseGroup,
-      semester: currentSemester,
-      students,
+      semester: { ...currentSemester, name: currentSemester.academicYear },
+      students: students.map((s) => ({
+        id: s.id,
+        facultyNumber: s.facultyNumber,
+        firstName: s.firstName,
+        lastName: s.lastName,
+        grade: s.grades[0] ?? null,
+      })),
     },
   };
 }
@@ -117,12 +104,12 @@ export async function setGrade(
 ): Promise<{ error: string; status: number } | { data: unknown }> {
   const courseGroup = await prisma.courseGroup.findUnique({
     where: { id: courseGroupId },
-    select: { course: { select: { academicStaffId: true } } },
+    select: { academicStaffId: true },
   });
   if (!courseGroup) {
     return { error: "CourseGroup not found", status: 404 };
   }
-  if (courseGroup.course.academicStaffId !== academicStaffId) {
+  if (courseGroup.academicStaffId !== academicStaffId) {
     return { error: "You are not the lecturer for this course", status: 403 };
   }
 
@@ -152,17 +139,6 @@ export async function setGrade(
 export async function getMyGrades(
   studentId: number,
 ): Promise<{ error: string; status: number } | { data: unknown }> {
-  const studentSemesters = await prisma.studentSemester.findMany({
-    where: { studentId },
-    orderBy: [{ semester: { startDate: "desc" } }],
-    select: {
-      id: true,
-      curriculumSemester: true,
-      semester: { select: { id: true, name: true, period: true } },
-      group: { select: { number: true, year: true, specialty: { select: { name: true } } } },
-    },
-  });
-
   const grades = await prisma.grade.findMany({
     where: { studentId },
     select: {
@@ -171,41 +147,44 @@ export async function getMyGrades(
       courseGroup: {
         select: {
           id: true,
-          curriculumSemester: true,
+          semesterNum: true,
+          semesterId: true,
+          semester: { select: { id: true, academicYear: true, period: true } },
           course: {
             select: {
               id: true,
               code: true,
               name: true,
               credits: true,
-              type: true,
-              academicStaff: { select: { firstName: true, lastName: true, title: true } },
             },
           },
+          academicStaff: { select: { firstName: true, lastName: true, role: true } },
         },
       },
     },
+    orderBy: [{ courseGroup: { semesterNum: "asc" } }],
   });
 
-  const gradesByCurriculumSemester = new Map<number, typeof grades>();
-  for (const g of grades) {
-    const cs = g.courseGroup.curriculumSemester;
-    if (!gradesByCurriculumSemester.has(cs)) {
-      gradesByCurriculumSemester.set(cs, []);
-    }
-    gradesByCurriculumSemester.get(cs)!.push(g);
-  }
+  const semesterMap = new Map<string, { semester: { id: number; name: string; period: string }; curriculumSemester: number; grades: unknown[] }>();
 
-  const semesters = studentSemesters.map((ss) => ({
-    semester: ss.semester,
-    curriculumSemester: ss.curriculumSemester,
-    group: ss.group,
-    grades: (gradesByCurriculumSemester.get(ss.curriculumSemester) ?? []).map((g) => ({
+  for (const g of grades) {
+    const cg = g.courseGroup;
+    const key = `${cg.semester.id}-${cg.semesterNum}`;
+    if (!semesterMap.has(key)) {
+      semesterMap.set(key, {
+        semester: { id: cg.semester.id, name: `${cg.semester.academicYear} ${cg.semester.period}`, period: cg.semester.period },
+        curriculumSemester: cg.semesterNum,
+        grades: [],
+      });
+    }
+    semesterMap.get(key)!.grades.push({
       id: g.id,
       finalGrade: g.finalGrade,
-      course: g.courseGroup.course,
-    })),
-  }));
+      course: { ...cg.course, academicStaff: cg.academicStaff },
+    });
+  }
+
+  const semesters = Array.from(semesterMap.values()).sort((a, b) => a.curriculumSemester - b.curriculumSemester);
 
   return { data: { semesters } };
 }

@@ -7,10 +7,8 @@ export type EventItem = {
   endTime: string | null;
   room: string | null;
   course: { code: string; name: string };
-  academicStaff?: { firstName: string; lastName: string; title: string };
-  specialty?: { name: string };
-  year?: number;
-  group?: number | null;
+  group?: { number: number; studyYear: number } | null;
+  academicStaff?: { firstName: string; lastName: string; role: string };
 };
 
 export type EventsResponse = {

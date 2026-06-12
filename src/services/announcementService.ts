@@ -2,7 +2,7 @@ import { prisma } from "../prisma.ts";
 
 export async function createAnnouncement(
   userId: number,
-  body: { message: string; type?: string; validTo: string; courseId?: number; groupId?: number },
+  body: { message: string; type?: string; validTo: string; courseGroupId?: number },
 ): Promise<{ error: string; status: number } | { data: Record<string, unknown>; status: number }> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -13,25 +13,13 @@ export async function createAnnouncement(
     return { error: "Only academic staff can create announcements", status: 403 };
   }
 
-  const currentSemester = await prisma.semester.findFirst({
-    where: { isCurrent: true },
-    orderBy: [{ startDate: "desc" }],
-    select: { id: true },
-  });
-
-  if (!currentSemester) {
-    return { error: "No active semester found", status: 404 };
-  }
-
   const announcement = await prisma.announcement.create({
     data: {
       message: body.message,
       type: (body.type as any) ?? "ИНФОРМАЦИЯ",
       validTo: new Date(body.validTo),
       academicStaffId: user.academicStaff.id,
-      courseId: body.courseId ?? null,
-      groupId: body.groupId ?? null,
-      semesterId: currentSemester.id,
+      courseGroupId: body.courseGroupId ?? null,
     },
     select: {
       id: true,
@@ -39,8 +27,12 @@ export async function createAnnouncement(
       type: true,
       validTo: true,
       createdAt: true,
-      course: { select: { code: true, name: true } },
-      group: { select: { number: true, year: true, specialty: { select: { name: true } } } },
+      courseGroup: {
+        select: {
+          course: { select: { code: true, name: true } },
+          group: { select: { number: true, studyYear: true, specialty: { select: { name: true } } } },
+        },
+      },
     },
   });
 
@@ -65,25 +57,30 @@ export async function getAnnouncementsForUser(
   const now = new Date();
 
   if (user.student) {
+    const fullStudent = await prisma.student.findUnique({
+      where: { id: user.student.id },
+      select: { groupId: true },
+    });
+
     const currentSemester = await prisma.semester.findFirst({
       where: { isCurrent: true },
       orderBy: [{ startDate: "desc" }],
       select: { id: true },
     });
 
-    const studentSemester = currentSemester
-      ? await prisma.studentSemester.findUnique({
-          where: { studentId_semesterId: { studentId: user.student.id, semesterId: currentSemester.id } },
-          select: { groupId: true },
-        })
-      : null;
+    const courseGroupIds = currentSemester && fullStudent
+      ? (await prisma.courseGroup.findMany({
+          where: { groupId: fullStudent.groupId, semesterId: currentSemester.id },
+          select: { id: true },
+        })).map((cg) => cg.id)
+      : [];
 
     const announcements = await prisma.announcement.findMany({
       where: {
         validTo: { gte: now },
         OR: [
-          { groupId: null },
-          ...(studentSemester ? [{ groupId: studentSemester.groupId }] : []),
+          { courseGroupId: null },
+          { courseGroupId: { in: courseGroupIds } },
         ],
       },
       select: {
@@ -92,8 +89,8 @@ export async function getAnnouncementsForUser(
         type: true,
         validTo: true,
         createdAt: true,
-        course: { select: { code: true, name: true } },
-        academicStaff: { select: { firstName: true, lastName: true, title: true } },
+        courseGroup: { select: { course: { select: { code: true, name: true } } } },
+        academicStaff: { select: { firstName: true, lastName: true, role: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -113,8 +110,12 @@ export async function getAnnouncementsForUser(
         type: true,
         validTo: true,
         createdAt: true,
-        course: { select: { code: true, name: true } },
-        group: { select: { number: true, year: true, specialty: { select: { name: true } } } },
+        courseGroup: {
+          select: {
+            course: { select: { code: true, name: true } },
+            group: { select: { number: true, studyYear: true, specialty: { select: { name: true } } } },
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -128,7 +129,7 @@ export async function getAnnouncementsForUser(
 export async function updateAnnouncement(
   userId: number,
   announcementId: number,
-  body: { message?: string; type?: string; validTo?: string; courseId?: number | null; groupId?: number | null },
+  body: { message?: string; type?: string; validTo?: string; courseGroupId?: number | null },
 ): Promise<{ error: string; status: number } | { data: Record<string, unknown> }> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -158,8 +159,7 @@ export async function updateAnnouncement(
       ...(body.message !== undefined && { message: body.message }),
       ...(body.type !== undefined && { type: body.type as any }),
       ...(body.validTo !== undefined && { validTo: new Date(body.validTo) }),
-      ...(body.courseId !== undefined && { courseId: body.courseId }),
-      ...(body.groupId !== undefined && { groupId: body.groupId }),
+      ...(body.courseGroupId !== undefined && { courseGroupId: body.courseGroupId }),
     },
     select: {
       id: true,
@@ -167,8 +167,12 @@ export async function updateAnnouncement(
       type: true,
       validTo: true,
       createdAt: true,
-      course: { select: { code: true, name: true } },
-      group: { select: { number: true, year: true, specialty: { select: { name: true } } } },
+      courseGroup: {
+        select: {
+          course: { select: { code: true, name: true } },
+          group: { select: { number: true, studyYear: true, specialty: { select: { name: true } } } },
+        },
+      },
     },
   });
 
@@ -217,29 +221,16 @@ export async function getStaffFormOptions(
     return { error: "Only academic staff can access form options", status: 403 };
   }
 
-  const courses = await prisma.course.findMany({
+  const courseGroups = await prisma.courseGroup.findMany({
     where: { academicStaffId: user.academicStaff.id },
     select: {
       id: true,
-      code: true,
-      name: true,
-      courseGroups: {
-        select: {
-          id: true,
-          curriculumSemester: true,
-          group: { select: { id: true, number: true, year: true, specialtyId: true } },
-        },
-      },
+      semesterNum: true,
+      course: { select: { id: true, code: true, name: true } },
+      group: { select: { id: true, number: true, studyYear: true, specialty: { select: { id: true, name: true } } } },
     },
-    orderBy: { name: "asc" },
+    orderBy: [{ course: { name: "asc" } }],
   });
 
-  const groupIds = [...new Set(courses.flatMap((c) => c.courseGroups.map((cg) => cg.group.id)))];
-  const groups = await prisma.group.findMany({
-    where: { id: { in: groupIds } },
-    select: { id: true, number: true, year: true, specialty: { select: { id: true, name: true } } },
-    orderBy: [{ year: "asc" }, { number: "asc" }],
-  });
-
-  return { data: { courses, groups } };
+  return { data: { courseGroups } };
 }

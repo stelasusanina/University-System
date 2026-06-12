@@ -18,24 +18,23 @@ export async function removePushToken(token: string) {
   await prisma.pushToken.deleteMany({ where: { token } });
 }
 
-export async function getTargetedPushTokens(groupId: number | null) {
-  const currentSemester = await prisma.semester.findFirst({
-    where: { isCurrent: true },
-    orderBy: [{ startDate: "desc" }],
+export async function getTargetedPushTokens(courseGroupId: number | null) {
+  let studentGroupId: number | null = null;
+
+  if (courseGroupId != null) {
+    const cg = await prisma.courseGroup.findUnique({
+      where: { id: courseGroupId },
+      select: { groupId: true },
+    });
+    studentGroupId = cg?.groupId ?? null;
+  }
+
+  const students = await prisma.student.findMany({
+    where: studentGroupId != null ? { groupId: studentGroupId } : {},
     select: { id: true },
   });
 
-  if (!currentSemester) return [];
-
-  const studentSemesters = await prisma.studentSemester.findMany({
-    where: {
-      semesterId: currentSemester.id,
-      ...(groupId != null ? { groupId } : {}),
-    },
-    select: { studentId: true },
-  });
-
-  const studentIds = studentSemesters.map((ss) => ss.studentId);
+  const studentIds = students.map((s) => s.id);
   if (studentIds.length === 0) return [];
 
   const users = await prisma.user.findMany({

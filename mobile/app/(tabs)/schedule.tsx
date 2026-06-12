@@ -171,7 +171,7 @@ export default function ScheduleScreen() {
               <View style={styles.metaRow}>
                 <Ionicons name="person-outline" size={13} color="#94a3b8" />
                 <Text style={styles.metaText}>
-                  {course.lecturer.title} {course.lecturer.firstName} {course.lecturer.lastName}
+                  {course.lecturer.role} {course.lecturer.firstName} {course.lecturer.lastName}
                 </Text>
               </View>
 

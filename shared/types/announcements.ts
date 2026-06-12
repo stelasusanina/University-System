@@ -4,11 +4,11 @@ export type Announcement = {
   type: string;
   validTo: string;
   createdAt: string;
-  course?: { code: string; name: string } | null;
-  academicStaff?: { firstName: string; lastName: string; title: string };
-  specialty?: { name: string };
-  year?: number;
-  group?: number | null;
+  courseGroup?: {
+    course?: { code: string; name: string } | null;
+    group?: { number: number; studyYear: number; specialty: { name: string } } | null;
+  } | null;
+  academicStaff?: { firstName: string; lastName: string; role: string };
 };
 
 export type Course = {

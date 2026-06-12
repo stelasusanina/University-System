@@ -11,9 +11,8 @@ export type CourseWithMaterials = {
   id: number;
   code: string;
   name: string;
+  year: number;
   semester: number;
-  type: string;
-  academicStaff: { firstName: string; lastName: string; title: string };
   materials: Material[];
 };
 

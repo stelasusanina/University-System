@@ -2,7 +2,14 @@ import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { api } from "../services/api";
 import Navbar from "../components/Navbar";
-import type { Announcement, Course, Specialty } from "@shared/types/announcements";
+import type { Announcement } from "@shared/types/announcements";
+
+type CourseGroupOption = {
+  id: number;
+  semesterNum: number;
+  course: { id: number; code: string; name: string };
+  group: { id: number; number: number; studyYear: number; specialty: { id: number; name: string } };
+};
 
 const ANNOUNCEMENT_TYPES = ["ИНФОРМАЦИЯ", "ЗАКЪСНЕНИЕ", "ОТМЯНА", "СМЯНА_НА_ЗАЛА", "СПЕШНО"];
 
@@ -16,21 +23,16 @@ const ANNOUNCEMENT_CSS: Record<string, string> = {
 
 export default function ManageAnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [specialties, setSpecialties] = useState<Specialty[]>([]);
+  const [courseGroups, setCourseGroups] = useState<CourseGroupOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  // Form state
   const [message, setMessage] = useState("");
   const [type, setType] = useState("ИНФОРМАЦИЯ");
   const [validTo, setValidTo] = useState("");
-  const [specialtyId, setSpecialtyId] = useState<number | "">("");
-  const [year, setYear] = useState<number | "">("");
-  const [group, setGroup] = useState<number | "">("");
-  const [courseId, setCourseId] = useState<number | "">("");
+  const [courseGroupId, setCourseGroupId] = useState<number | "">("");
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -42,11 +44,10 @@ export default function ManageAnnouncementsPage() {
     try {
       const [announcementsData, optionsData] = await Promise.all([
         api.get<Announcement[]>("/announcements"),
-        api.get<{ courses: Course[]; specialties: Specialty[] }>("/announcements/form-options"),
+        api.get<{ courseGroups: CourseGroupOption[] }>("/announcements/form-options"),
       ]);
       setAnnouncements(announcementsData);
-      setCourses(optionsData.courses);
-      setSpecialties(optionsData.specialties);
+      setCourseGroups(optionsData.courseGroups);
     } catch {
       setError("Неуспешно зареждане на данни");
     } finally {
@@ -58,10 +59,7 @@ export default function ManageAnnouncementsPage() {
     setMessage("");
     setType("ИНФОРМАЦИЯ");
     setValidTo("");
-    setSpecialtyId("");
-    setYear("");
-    setGroup("");
-    setCourseId("");
+    setCourseGroupId("");
     setFormError("");
     setEditingId(null);
     setShowForm(false);
@@ -71,12 +69,7 @@ export default function ManageAnnouncementsPage() {
     setMessage(a.message);
     setType(a.type);
     setValidTo(dayjs(a.validTo).format("YYYY-MM-DDTHH:mm"));
-    const spec = specialties.find((s) => s.name === a.specialty?.name);
-    setSpecialtyId(spec?.id ?? "");
-    setYear(a.year ?? "");
-    setGroup(a.group ?? "");
-    const course = a.course ? courses.find((c) => c.name === a.course!.name) : null;
-    setCourseId(course?.id ?? "");
+    setCourseGroupId("");
     setEditingId(a.id);
     setFormError("");
     setShowForm(true);
@@ -86,8 +79,8 @@ export default function ManageAnnouncementsPage() {
     e.preventDefault();
     setFormError("");
 
-    if (!message.trim() || !validTo || !specialtyId || !year) {
-      setFormError("Съобщение, валидност, специалност и курс са задължителни.");
+    if (!message.trim() || !validTo) {
+      setFormError("Съобщение и валидност са задължителни.");
       return;
     }
 
@@ -97,10 +90,7 @@ export default function ManageAnnouncementsPage() {
         message: message.trim(),
         type,
         validTo,
-        specialtyId,
-        year,
-        group: group || null,
-        courseId: courseId || null,
+        courseGroupId: courseGroupId || null,
       };
 
       if (editingId) {
@@ -128,10 +118,6 @@ export default function ManageAnnouncementsPage() {
       setError("Неуспешно изтриване на съобщението");
     }
   }
-
-  const selectedSpecialty = specialties.find((s) => s.id === specialtyId);
-  const yearOptions = selectedSpecialty ? Array.from({ length: selectedSpecialty.years }, (_, i) => i + 1) : [];
-  const filteredCourses = specialtyId ? courses.filter((c) => c.specialtyId === specialtyId) : courses;
 
   return (
     <div className="app-layout">
@@ -174,37 +160,14 @@ export default function ManageAnnouncementsPage() {
               <textarea rows={3} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Напишете вашето съобщение..." required />
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label>Специалност</label>
-                <select value={specialtyId} onChange={(e) => { setSpecialtyId(e.target.value ? Number(e.target.value) : ""); setYear(""); setCourseId(""); }} required>
-                  <option value="">Изберете специалност</option>
-                  {specialties.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Курс</label>
-                <select value={year} onChange={(e) => setYear(e.target.value ? Number(e.target.value) : "")} required disabled={!specialtyId}>
-                  <option value="">Изберете курс</option>
-                  {yearOptions.map((y) => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Група (по избор)</label>
-                <input type="number" min="1" value={group} onChange={(e) => setGroup(e.target.value ? Number(e.target.value) : "")} placeholder="Всички групи" />
-              </div>
-            </div>
-
             <div className="form-group">
-              <label>Дисциплина (по избор)</label>
-              <select value={courseId} onChange={(e) => setCourseId(e.target.value ? Number(e.target.value) : "")}>
-                <option value="">Без конкретна дисциплина</option>
-                {filteredCourses.map((c) => (
-                  <option key={c.id} value={c.id}>{c.code} — {c.name}</option>
+              <label>Група (по избор)</label>
+              <select value={courseGroupId} onChange={(e) => setCourseGroupId(e.target.value ? Number(e.target.value) : "")}>
+                <option value="">Всички групи</option>
+                {courseGroups.map((cg) => (
+                  <option key={cg.id} value={cg.id}>
+                    {cg.course.code} — {cg.group.specialty.name}, Курс {cg.group.studyYear}, Група {cg.group.number}
+                  </option>
                 ))}
               </select>
             </div>
@@ -232,8 +195,12 @@ export default function ManageAnnouncementsPage() {
                 </div>
                 <p className="announcement-message">{a.message}</p>
                 <div className="announcement-meta">
-                  {a.specialty && <span>{a.specialty.name}, Курс {a.year}{a.group ? `, Група ${a.group}` : ""}</span>}
-                  {a.course && <span> · {a.course.name}</span>}
+                  {a.courseGroup?.group && (
+                    <span>
+                      {a.courseGroup.group.specialty.name}, Курс {a.courseGroup.group.studyYear}, Група {a.courseGroup.group.number}
+                    </span>
+                  )}
+                  {a.courseGroup?.course && <span> · {a.courseGroup.course.name}</span>}
                   <span className="announcement-valid-to">Валидно до {dayjs(a.validTo).format("D.M.YYYY, HH:mm")}</span>
                 </div>
                 <div className="announcement-actions">

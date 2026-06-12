@@ -6,15 +6,13 @@ export type GradeEntry = {
     code: string;
     name: string;
     credits: number;
-    type: string;
-    academicStaff: { firstName: string; lastName: string; title: string };
+    academicStaff: { firstName: string; lastName: string; role: string };
   };
 };
 
 export type SemesterGrades = {
   semester: { id: number; name: string; period: string };
   curriculumSemester: number;
-  group: { number: number; year: number; specialty: { name: string } };
   grades: GradeEntry[];
 };
 
@@ -32,8 +30,8 @@ export type StudentRow = {
 
 export type CourseGroupRow = {
   id: number;
-  curriculumSemester: number;
-  group: { id: number; number: number; year: number; specialty: { name: string } };
+  semesterNum: number;
+  group: { id: number; number: number; studyYear: number; specialty: { name: string } };
   _count: { grades: number };
 };
 

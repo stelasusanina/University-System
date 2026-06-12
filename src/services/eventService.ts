@@ -26,19 +26,20 @@ export async function getEventsForUser(userId: number): Promise<{ error: string;
   let events;
 
   if (user.student) {
-    const studentSemester = await prisma.studentSemester.findUnique({
-      where: { studentId_semesterId: { studentId: user.student.id, semesterId: currentSemester.id } },
+    const fullStudent = await prisma.student.findUnique({
+      where: { id: user.student.id },
       select: { groupId: true },
     });
 
+    const courseGroupIds = fullStudent
+      ? (await prisma.courseGroup.findMany({
+          where: { groupId: fullStudent.groupId, semesterId: currentSemester.id },
+          select: { id: true },
+        })).map((cg) => cg.id)
+      : [];
+
     events = await prisma.event.findMany({
-      where: {
-        semesterId: currentSemester.id,
-        OR: [
-          { groupId: null },
-          ...(studentSemester ? [{ groupId: studentSemester.groupId }] : []),
-        ],
-      },
+      where: { courseGroupId: { in: courseGroupIds } },
       select: {
         id: true,
         title: true,
@@ -47,17 +48,19 @@ export async function getEventsForUser(userId: number): Promise<{ error: string;
         startTime: true,
         endTime: true,
         room: true,
-        course: { select: { code: true, name: true } },
-        academicStaff: { select: { firstName: true, lastName: true, title: true } },
+        courseGroup: {
+          select: {
+            course: { select: { code: true, name: true } },
+            group: { select: { number: true, studyYear: true } },
+          },
+        },
+        academicStaff: { select: { firstName: true, lastName: true, role: true } },
       },
       orderBy: { date: "asc" },
     });
   } else if (user.academicStaff) {
     events = await prisma.event.findMany({
-      where: {
-        semesterId: currentSemester.id,
-        academicStaffId: user.academicStaff.id,
-      },
+      where: { academicStaffId: user.academicStaff.id },
       select: {
         id: true,
         title: true,
@@ -66,8 +69,12 @@ export async function getEventsForUser(userId: number): Promise<{ error: string;
         startTime: true,
         endTime: true,
         room: true,
-        course: { select: { code: true, name: true } },
-        group: { select: { number: true, year: true, specialty: { select: { name: true } } } },
+        courseGroup: {
+          select: {
+            course: { select: { code: true, name: true } },
+            group: { select: { number: true, studyYear: true, specialty: { select: { name: true } } } },
+          },
+        },
       },
       orderBy: { date: "asc" },
     });
@@ -75,9 +82,16 @@ export async function getEventsForUser(userId: number): Promise<{ error: string;
     return { error: "No student or staff profile linked", status: 403 };
   }
 
-  const dates = [...new Set(events.map((e) => e.date.toISOString().split("T")[0]))];
+  const normalized = events.map((e) => ({
+    ...e,
+    course: e.courseGroup.course,
+    group: e.courseGroup.group,
+    courseGroup: undefined,
+  }));
 
-  return { data: { dates, events } };
+  const dates = [...new Set(normalized.map((e) => (e.date as Date).toISOString().split("T")[0]))];
+
+  return { data: { dates, events: normalized } };
 }
 
 export async function createEvent(
@@ -89,8 +103,7 @@ export async function createEvent(
     startTime?: string;
     endTime?: string;
     room?: string;
-    courseId: number;
-    groupId?: number;
+    courseGroupId: number;
   },
 ): Promise<{ error: string; status: number } | { data: Record<string, unknown>; status: number }> {
   const user = await prisma.user.findUnique({
@@ -109,14 +122,17 @@ export async function createEvent(
     return { error: "Не може да се създаде събитие за минала дата!", status: 400 };
   }
 
-  const currentSemester = await prisma.semester.findFirst({
-    where: { isCurrent: true },
-    orderBy: [{ startDate: "desc" }],
-    select: { id: true },
+  const courseGroup = await prisma.courseGroup.findUnique({
+    where: { id: body.courseGroupId },
+    select: { academicStaffId: true },
   });
 
-  if (!currentSemester) {
-    return { error: "No active semester found", status: 404 };
+  if (!courseGroup) {
+    return { error: "CourseGroup not found", status: 404 };
+  }
+
+  if (courseGroup.academicStaffId !== user.academicStaff.id) {
+    return { error: "You are not the lecturer for this course group", status: 403 };
   }
 
   const event = await prisma.event.create({
@@ -127,10 +143,8 @@ export async function createEvent(
       startTime: body.startTime ?? null,
       endTime: body.endTime ?? null,
       room: body.room ?? null,
-      courseId: body.courseId,
+      courseGroupId: body.courseGroupId,
       academicStaffId: user.academicStaff.id,
-      groupId: body.groupId ?? null,
-      semesterId: currentSemester.id,
     },
     select: {
       id: true,
@@ -140,8 +154,12 @@ export async function createEvent(
       startTime: true,
       endTime: true,
       room: true,
-      course: { select: { code: true, name: true } },
-      group: { select: { number: true, year: true, specialty: { select: { name: true } } } },
+      courseGroup: {
+        select: {
+          course: { select: { code: true, name: true } },
+          group: { select: { number: true, studyYear: true, specialty: { select: { name: true } } } },
+        },
+      },
     },
   });
 

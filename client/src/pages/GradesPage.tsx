@@ -113,9 +113,9 @@ function StaffGradesView() {
                       onClick={() => openGroup(cg.id)}
                     >
                       <span className="accordion-course-name">
-                        {cg.group.specialty.name} · Курс {cg.group.year} · Група {cg.group.number}
+                        {cg.group.specialty.name} · Курс {cg.group.studyYear} · Група {cg.group.number}
                       </span>
-                      <span className="accordion-meta">Сем. {cg.curriculumSemester}</span>
+                      <span className="accordion-meta">Сем. {cg.semesterNum}</span>
                       <span className="accordion-count">{cg._count.grades} оценки</span>
                       <span className="accordion-chevron">{openCourseGroup === cg.id ? "▲" : "▼"}</span>
                     </button>
@@ -238,7 +238,7 @@ function StudentGradesView() {
                     <td><span className="accordion-course-code">{e.course.code}</span></td>
                     <td>{e.course.name}</td>
                     <td>{e.course.credits}</td>
-                    <td>{e.course.academicStaff.title} {e.course.academicStaff.lastName}</td>
+                    <td>{e.course.academicStaff.role} {e.course.academicStaff.lastName}</td>
                     <td>
                       <span className={`grade-value ${gradeColor(e.finalGrade)}`}>
                         {e.finalGrade}

@@ -11,15 +11,15 @@ announcementsRouter.post("/", authenticate, async (req, res) => {
   if (!userId) {
     return res.status(401).json({ error: "Invalid token payload" });
   }
-  const { message, type, validTo, courseId, groupId } = req.body;
+  const { message, type, validTo, courseGroupId } = req.body;
   if (!message || !validTo) {
     return res.status(400).json({ error: "message and validTo are required" });
   }
-  const result = await createAnnouncement(userId, { message, type, validTo, courseId, groupId });
+  const result = await createAnnouncement(userId, { message, type, validTo, courseGroupId });
   if ("error" in result) {
     return res.status(result.status).json({ error: result.error });
   }
-  getTargetedPushTokens(groupId ?? null)
+  getTargetedPushTokens(courseGroupId ?? null)
     .then((tokens) => {
       if (tokens.length > 0) {
         const title = type ? type.replaceAll("_", " ") : "Ново съобщение";

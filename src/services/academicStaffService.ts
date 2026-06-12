@@ -10,7 +10,7 @@ export async function getAcademicStaffProgram(userId: number): Promise<{ error: 
           staffNumber: true,
           firstName: true,
           lastName: true,
-          title: true,
+          role: true,
           faculty: { select: { name: true } },
         },
       },
@@ -27,38 +27,37 @@ export async function getAcademicStaffProgram(userId: number): Promise<{ error: 
   const currentSemester = await prisma.semester.findFirst({
     where: { isCurrent: true },
     orderBy: [{ startDate: "desc" }],
-    select: { id: true, name: true, period: true },
+    select: { id: true, academicYear: true, period: true },
   });
 
   if (!currentSemester) {
     return { error: "No active semester found", status: 404 };
   }
 
-  const courses = await prisma.course.findMany({
+  const courseGroups = await prisma.courseGroup.findMany({
     where: {
       academicStaffId: user.academicStaff.id,
-      schedules: { some: { semesterId: currentSemester.id } },
+      semesterId: currentSemester.id,
     },
     select: {
       id: true,
-      code: true,
-      name: true,
-      description: true,
-      credits: true,
-      type: true,
-      courseGroups: {
+      semesterNum: true,
+      course: {
         select: {
-          curriculumSemester: true,
-          group: { select: { number: true, year: true, specialty: { select: { name: true } } } },
+          id: true,
+          code: true,
+          name: true,
+          description: true,
+          credits: true,
         },
       },
+      group: { select: { number: true, studyYear: true, specialty: { select: { name: true } } } },
       schedules: {
-        where: { semesterId: currentSemester.id },
         orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
         select: { id: true, dayOfWeek: true, startTime: true, endTime: true, room: true, type: true },
       },
     },
-    orderBy: [{ name: "asc" }],
+    orderBy: [{ course: { name: "asc" } }],
   });
 
   const { faculty, ...staffData } = user.academicStaff;
@@ -66,8 +65,15 @@ export async function getAcademicStaffProgram(userId: number): Promise<{ error: 
   return {
     data: {
       staff: { ...staffData, faculty: faculty.name },
-      semester: currentSemester,
-      courses,
+      semester: { ...currentSemester, name: `${currentSemester.academicYear} ${currentSemester.period}` },
+      courses: courseGroups.map(({ course, group, schedules, semesterNum }) => ({
+        ...course,
+        specialty: group.specialty.name,
+        group: group.number,
+        year: group.studyYear,
+        semesterNum,
+        schedules,
+      })),
     },
   };
 }

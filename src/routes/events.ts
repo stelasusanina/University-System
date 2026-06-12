@@ -35,11 +35,11 @@ eventsRouter.post("/", authenticate, async (req, res) => {
   if (!userId) {
     return res.status(401).json({ error: "Invalid token payload" });
   }
-  const { title, type, date, startTime, endTime, room, courseId, groupId } = req.body;
-  if (!title || !type || !date || !courseId) {
-    return res.status(400).json({ error: "title, type, date, and courseId are required" });
+  const { title, type, date, startTime, endTime, room, courseGroupId } = req.body;
+  if (!title || !type || !date || !courseGroupId) {
+    return res.status(400).json({ error: "title, type, date, and courseGroupId are required" });
   }
-  const result = await createEvent(userId, { title, type, date, startTime, endTime, room, courseId, groupId });
+  const result = await createEvent(userId, { title, type, date, startTime, endTime, room, courseGroupId });
   if ("error" in result) {
     return res.status(result.status).json({ error: result.error });
   }

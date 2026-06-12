@@ -158,12 +158,12 @@ export default function HomeScreen() {
               <Text style={styles.announcementMessage}>{a.message}</Text>
               {a.academicStaff && (
                 <Text style={styles.announcementAuthor}>
-                  — {a.academicStaff.title} {a.academicStaff.firstName}{" "}
+                  — {a.academicStaff.role} {a.academicStaff.firstName}{" "}
                   {a.academicStaff.lastName}
                 </Text>
               )}
-              {a.course && (
-                <Text style={styles.announcementCourse}>{a.course.name}</Text>
+              {a.courseGroup?.course && (
+                <Text style={styles.announcementCourse}>{a.courseGroup.course.name}</Text>
               )}
             </View>
           ))

@@ -30,9 +30,9 @@ function gradeLabel(grade: number | null): string {
 
 function SemesterBlock({ sg }: { sg: SemesterGrades }) {
   const [expanded, setExpanded] = useState(true);
-  const graded = sg.enrollments.filter((e) => e.grade !== null);
+  const graded = sg.grades.filter((e) => e.finalGrade !== null);
   const gpa = graded.length > 0
-    ? (graded.reduce((s, e) => s + e.grade!, 0) / graded.length).toFixed(2)
+    ? (graded.reduce((s, e) => s + e.finalGrade!, 0) / graded.length).toFixed(2)
     : null;
 
   return (
@@ -53,20 +53,20 @@ function SemesterBlock({ sg }: { sg: SemesterGrades }) {
 
       {expanded && (
         <View style={styles.enrollmentList}>
-          {sg.enrollments.map((e) => (
+          {sg.grades.map((e) => (
             <View key={e.id} style={styles.enrollmentRow}>
               <View style={styles.enrollmentInfo}>
                 <Text style={styles.courseName} numberOfLines={2}>{e.course.name}</Text>
                 <Text style={styles.courseMeta}>
-                  {e.course.credits} кр. · {e.course.academicStaff.title} {e.course.academicStaff.lastName}
+                  {e.course.credits} кр. · {e.course.academicStaff.role} {e.course.academicStaff.lastName}
                 </Text>
               </View>
               <View style={styles.gradePill}>
                 <Text style={styles.gradeNumber}>
-                  {e.grade ?? "—"}
+                  {e.finalGrade ?? "—"}
                 </Text>
                 <Text style={styles.gradeLabel}>
-                  {gradeLabel(e.grade)}
+                  {gradeLabel(e.finalGrade)}
                 </Text>
               </View>
             </View>
@@ -125,9 +125,9 @@ export default function GradesScreen() {
     );
   }
 
-  const allGraded = semesters.flatMap((sg) => sg.enrollments.filter((e) => e.grade !== null));
+  const allGraded = semesters.flatMap((sg) => sg.grades.filter((e) => e.finalGrade !== null));
   const overallGpa = allGraded.length > 0
-    ? (allGraded.reduce((s, e) => s + e.grade!, 0) / allGraded.length).toFixed(2)
+    ? (allGraded.reduce((s, e) => s + e.finalGrade!, 0) / allGraded.length).toFixed(2)
     : null;
 
   return (

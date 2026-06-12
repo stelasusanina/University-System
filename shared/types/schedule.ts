@@ -23,8 +23,7 @@ export type CourseWithSchedule = {
   name: string;
   description: string | null;
   credits: number;
-  type: string;
-  lecturer: { firstName: string; lastName: string; title: string };
+  lecturer: { firstName: string; lastName: string; role: string };
   schedules: ScheduleEntry[];
 }
 
@@ -66,12 +65,11 @@ export type StudentProgramResponse = {
     name: string;
     description: string | null;
     credits: number;
-    type: string;
     status: string;
     lecturer: {
       firstName: string;
       lastName: string;
-      title: string;
+      role: string;
     };
     schedules: Array<{
       id: number;
@@ -91,13 +89,12 @@ export type StaffProgramResponse = {
     staffNumber: string;
     firstName: string;
     lastName: string;
-    title: string;
+    role: string;
     faculty: string;
   };
   semester: {
     id: number;
     name: string;
-    year: number;
     period: string;
   };
   courses: Array<{
@@ -106,8 +103,10 @@ export type StaffProgramResponse = {
     name: string;
     description: string | null;
     credits: number;
-    type: string;
     specialty: string;
+    group: number;
+    year: number;
+    semesterNum: number;
     schedules: Array<{
       id: number;
       dayOfWeek: string;

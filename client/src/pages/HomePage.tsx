@@ -7,7 +7,7 @@ import { PickerDay, type PickerDayProps } from "@mui/x-date-pickers/PickerDay";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
 import type { EventItem, EventsResponse } from "@shared/types/events";
-import type { Announcement, Course, Specialty } from "@shared/types/announcements";
+import type { Announcement } from "@shared/types/announcements";
 import Navbar from "../components/Navbar";
 
 const EVENT_TYPES = ["КОНТРОЛНА", "ИЗПИТ", "ЗАДАНИЕ", "ЗАЩИТА_НА_ПРОЕКТ", "ДРУГО"];
@@ -21,6 +21,13 @@ const ANNOUNCEMENT_CSS: Record<string, string> = {
 };
 const STAFF_ROLES = ["ПРОФЕСОР", "ДОЦЕНТ", "ГЛАВЕН_АСИСТЕНТ", "АСИСТЕНТ"];
 
+type CourseGroupOption = {
+  id: number;
+  semesterNum: number;
+  course: { id: number; code: string; name: string };
+  group: { id: number; number: number; studyYear: number; specialty: { id: number; name: string } };
+};
+
 export default function HomePage() {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
@@ -31,18 +38,14 @@ export default function HomePage() {
   const isStaff = user?.role && STAFF_ROLES.includes(user.role);
 
   const [showAddModal, setShowAddModal] = useState(false);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [specialties, setSpecialties] = useState<Specialty[]>([]);
+  const [courseGroups, setCourseGroups] = useState<CourseGroupOption[]>([]);
   const [formTitle, setFormTitle] = useState("");
   const [formType, setFormType] = useState("КОНТРОЛНА");
   const [formDate, setFormDate] = useState(selectedDate?.format("YYYY-MM-DD") ?? "");
   const [formStartTime, setFormStartTime] = useState("");
   const [formEndTime, setFormEndTime] = useState("");
   const [formRoom, setFormRoom] = useState("");
-  const [formCourseId, setFormCourseId] = useState<number | "">("");
-  const [formSpecialtyId, setFormSpecialtyId] = useState<number | "">("");
-  const [formYear, setFormYear] = useState<number | "">("");
-  const [formGroup, setFormGroup] = useState<number | "">("");
+  const [formCourseGroupId, setFormCourseGroupId] = useState<number | "">("");
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -60,11 +63,8 @@ export default function HomePage() {
 
   useEffect(() => {
     if (isStaff) {
-      api.get<{ courses: Course[]; specialties: Specialty[] }>("/events/form-options")
-        .then((res) => {
-          setCourses(res.courses);
-          setSpecialties(res.specialties);
-        })
+      api.get<{ courseGroups: CourseGroupOption[] }>("/events/form-options")
+        .then((res) => setCourseGroups(res.courseGroups))
         .catch(() => {});
     }
   }, [isStaff]);
@@ -76,28 +76,19 @@ export default function HomePage() {
     setFormStartTime("");
     setFormEndTime("");
     setFormRoom("");
-    setFormCourseId("");
-    setFormSpecialtyId("");
-    setFormYear("");
-    setFormGroup("");
+    setFormCourseGroupId("");
     setFormError("");
     setShowAddModal(true);
   }
 
-  function handleCourseChange(courseId: number | "") {
-    setFormCourseId(courseId);
-    if (courseId !== "") {
-      const course = courses.find((c) => c.id === courseId);
-      if (course) setFormSpecialtyId(course.specialtyId);
-    } else {
-      setFormSpecialtyId("");
-    }
+  function handleCourseChange(courseGroupId: number | "") {
+    setFormCourseGroupId(courseGroupId);
   }
 
   async function handleAddEvent(e: React.FormEvent) {
     e.preventDefault();
-    if (!formTitle || !formType || !formDate || formCourseId === "" || formSpecialtyId === "" || formYear === "") {
-      setFormError("Заглавие, вид, дата, дисциплина, специалност и курс са задължителни.");
+    if (!formTitle || !formType || !formDate || formCourseGroupId === "") {
+      setFormError("Заглавие, вид, дата и група са задължителни.");
       return;
     }
     setSubmitting(true);
@@ -110,10 +101,7 @@ export default function HomePage() {
         startTime: formStartTime || undefined,
         endTime: formEndTime || undefined,
         room: formRoom || undefined,
-        courseId: formCourseId,
-        specialtyId: formSpecialtyId,
-        year: formYear,
-        group: formGroup !== "" ? formGroup : undefined,
+        courseGroupId: formCourseGroupId,
       });
       setShowAddModal(false);
       loadEvents();
@@ -133,8 +121,6 @@ export default function HomePage() {
 
   const selectedDateStr = selectedDate?.format("YYYY-MM-DD") ?? "";
   const selectedEvents = events.filter((e) => e.date.split("T")[0] === selectedDateStr);
-
-  const selectedSpecialty = specialties.find((s) => s.id === formSpecialtyId);
 
   function ScheduleDay(props: PickerDayProps) {
     const { day, outsideCurrentMonth, today, ...other } = props;
@@ -220,9 +206,9 @@ export default function HomePage() {
                     <span>{event.title}</span>
                     {event.startTime && <span>{event.startTime}{event.endTime ? `–${event.endTime}` : ""}</span>}
                     {event.room && <span>Зала {event.room}</span>}
-                    {isStaff && event.specialty && (
+                    {isStaff && event.group && (
                       <span className="calendar-event-meta">
-                        {event.specialty.name} · Курс {event.year}{event.group != null ? ` · Група ${event.group}` : ""}
+                        Курс {event.group.studyYear} · Група {event.group.number}
                       </span>
                     )}
                     {isStaff && (
@@ -255,10 +241,10 @@ export default function HomePage() {
                   <p className="announcement-message">{a.message}</p>
                   {a.academicStaff && (
                     <span className="announcement-author">
-                      — {a.academicStaff.title} {a.academicStaff.firstName} {a.academicStaff.lastName}
+                      — {a.academicStaff.role} {a.academicStaff.firstName} {a.academicStaff.lastName}
                     </span>
                   )}
-                  {a.course && <span className="announcement-course">{a.course.name}</span>}
+                  {a.courseGroup?.course && <span className="announcement-course">{a.courseGroup.course.name}</span>}
                 </div>
               ))
             ) : (
@@ -306,46 +292,15 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="form-group">
-                <label>Дисциплина</label>
-                <select value={formCourseId} onChange={(e) => handleCourseChange(e.target.value ? Number(e.target.value) : "")} required>
-                  <option value="">— изберете дисциплина —</option>
-                  {courses.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
+                <label>Група</label>
+                <select value={formCourseGroupId} onChange={(e) => handleCourseChange(e.target.value ? Number(e.target.value) : "")} required>
+                  <option value="">— изберете група —</option>
+                  {courseGroups.map((cg) => (
+                    <option key={cg.id} value={cg.id}>
+                      {cg.course.code} — {cg.group.specialty.name}, Курс {cg.group.studyYear}, Гр. {cg.group.number}
+                    </option>
                   ))}
                 </select>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Специалност</label>
-                  <select value={formSpecialtyId} onChange={(e) => setFormSpecialtyId(e.target.value ? Number(e.target.value) : "")} required>
-                    <option value="">— изберете специалност —</option>
-                    {specialties.map((s) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Курс</label>
-                  <select value={formYear} onChange={(e) => setFormYear(e.target.value ? Number(e.target.value) : "")} required>
-                    <option value="">—</option>
-                    {selectedSpecialty
-                      ? Array.from({ length: selectedSpecialty.years }, (_, i) => i + 1).map((y) => (
-                          <option key={y} value={y}>{y}</option>
-                        ))
-                      : Array.from({ length: 5 }, (_, i) => i + 1).map((y) => (
-                          <option key={y} value={y}>{y}</option>
-                        ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Група (по избор)</label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={formGroup}
-                    onChange={(e) => setFormGroup(e.target.value ? Number(e.target.value) : "")}
-                  />
-                </div>
               </div>
               {formError && <p className="form-error">{formError}</p>}
               <div className="form-actions">

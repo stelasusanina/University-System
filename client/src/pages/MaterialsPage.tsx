@@ -20,8 +20,6 @@ interface CourseWithMaterials {
   name: string;
   year: number;
   semester: number;
-  type: string;
-  academicStaff: { firstName: string; lastName: string; title: string };
   materials: MaterialItem[];
 }
 

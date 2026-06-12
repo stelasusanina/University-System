@@ -15,10 +15,10 @@ function extractFileType(originalName: string): string {
 }
 
 export async function uploadMaterial(input: UploadMaterialInput) {
-  const course = await prisma.course.findFirst({
-    where: { id: input.courseId, academicStaffId: input.academicStaffId },
+  const courseGroup = await prisma.courseGroup.findFirst({
+    where: { courseId: input.courseId, academicStaffId: input.academicStaffId },
   });
-  if (!course) {
+  if (!courseGroup) {
     throw new Error("Course not found or you are not the assigned lecturer for this course");
   }
 
@@ -37,11 +37,15 @@ export async function uploadMaterial(input: UploadMaterialInput) {
 }
 
 export async function getCoursesForStaff(academicStaffId: number) {
-  return prisma.course.findMany({
+  const courseGroups = await prisma.courseGroup.findMany({
     where: { academicStaffId },
-    orderBy: [{ name: "asc" }],
-    select: { id: true, code: true, name: true },
+    select: {
+      course: { select: { id: true, code: true, name: true } },
+    },
+    distinct: ["courseId"],
+    orderBy: [{ course: { name: "asc" } }],
   });
+  return courseGroups.map((cg) => cg.course);
 }
 
 export async function getMaterialsByStaff(academicStaffId: number) {
@@ -71,7 +75,6 @@ export async function deleteMaterial(
   if (material.academicStaffId !== academicStaffId) {
     return { error: "You can only delete your own materials", status: 403 };
   }
-
   await prisma.material.delete({ where: { id: materialId } });
   return { success: true };
 }
@@ -88,43 +91,43 @@ export async function getMaterialsForCourse(courseId: number) {
       fileType: true,
       uploadedAt: true,
       academicStaff: {
-        select: { firstName: true, lastName: true, title: true },
+        select: { firstName: true, lastName: true, role: true },
       },
     },
   });
 }
 
 export async function getCoursesWithMaterialsForStudent(studentId: number) {
+  const student = await prisma.student.findUnique({
+    where: { id: studentId },
+    select: { groupId: true, group: { select: { studyYear: true } } },
+  });
+  if (!student) {
+    return null;
+  }
+
   const currentSemester = await prisma.semester.findFirst({
     where: { isCurrent: true },
     orderBy: [{ startDate: "desc" }],
     select: { id: true },
   });
-
-  if (!currentSemester) return null;
-
-  const studentSemester = await prisma.studentSemester.findUnique({
-    where: { studentId_semesterId: { studentId, semesterId: currentSemester.id } },
-    select: { groupId: true, curriculumSemester: true },
-  });
-
-  if (!studentSemester) return null;
+  if (!currentSemester) {
+    return null;
+  }
 
   const courseGroups = await prisma.courseGroup.findMany({
     where: {
-      groupId: studentSemester.groupId,
-      curriculumSemester: studentSemester.curriculumSemester,
+      groupId: student.groupId,
+      semesterId: currentSemester.id,
     },
     orderBy: [{ course: { name: "asc" } }],
     select: {
-      curriculumSemester: true,
+      semesterNum: true,
       course: {
         select: {
           id: true,
           code: true,
           name: true,
-          type: true,
-          academicStaff: { select: { firstName: true, lastName: true, title: true } },
           materials: {
             orderBy: { uploadedAt: "desc" },
             select: {
@@ -141,9 +144,10 @@ export async function getCoursesWithMaterialsForStudent(studentId: number) {
     },
   });
 
-  const courses = courseGroups.map(({ curriculumSemester, course }) => ({
+  const courses = courseGroups.map(({ semesterNum, course }) => ({
     ...course,
-    semester: curriculumSemester,
+    year: student.group.studyYear,
+    semester: semesterNum,
   }));
 
   return { courses };
