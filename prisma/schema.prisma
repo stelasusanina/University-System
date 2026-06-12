@@ -15,38 +15,41 @@ model User {
   studentId       Int?     @unique
   academicStaffId Int?     @unique
   createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
 
   student       Student?       @relation(fields: [studentId], references: [id])
   academicStaff AcademicStaff? @relation(fields: [academicStaffId], references: [id])
   pushTokens    PushToken[]
 }
 
+model PushToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique @db.VarChar(200)
+  userId    Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model Faculty {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique @db.VarChar(200)
-  code        String   @unique @db.VarChar(10)
-  description String?  @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          Int     @id @default(autoincrement())
+  name        String  @unique @db.VarChar(200)
+  code        String  @unique @db.VarChar(10)
+  description String? @db.Text
 
   specialties          Specialty[]
   academicStaffMembers AcademicStaff[]
 }
 
 model Specialty {
-  id        Int      @id @default(autoincrement())
-  name      String   @db.VarChar(200)
-  code      String   @unique @db.VarChar(20)
-  degree    Degree   @default(BACHELOR)
-  years     Int      @default(4)
+  id        Int    @id @default(autoincrement())
+  name      String @db.VarChar(200)
+  code      String @unique @db.VarChar(20)
+  degree    Degree @default(БАКАЛАВЪР)
+  years     Int    @default(4)
   facultyId Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   faculty Faculty @relation(fields: [facultyId], references: [id])
-
-  groups Group[]
+  groups  Group[]
 }
 
 model Group {
@@ -57,12 +60,8 @@ model Group {
 
   specialty Specialty @relation(fields: [specialtyId], references: [id])
 
-  students      Student[]
-  semesters     StudentSemester[]
-  courseGroups  CourseGroup[]
-  schedules     Schedule[]
-  events        Event[]
-  announcements Announcement[]
+  students     Student[]
+  courseGroups CourseGroup[]
 
   @@unique([number, studyYear, specialtyId])
 }
@@ -74,48 +73,29 @@ model Student {
   lastName      String   @db.VarChar(100)
   phone         String?  @db.VarChar(20)
   groupId       Int
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  role          UserRole @default(СТУДЕНТ)
 
-  group     Group     @relation(fields: [groupId], references: [id])
-  semesters StudentSemester[]
-  grades    Grade[]
+  group  Group   @relation(fields: [groupId], references: [id])
+  grades Grade[]
 
   user User?
 }
 
-model StudentSemester {
-  id         Int @id @default(autoincrement())
-
-  studentId  Int
-  semesterId Int
-
-  status StudentStatus @default(ACTIVE)
-
-  student  Student  @relation(fields: [studentId], references: [id])
-  semester Semester @relation(fields: [semesterId], references: [id])
-
-  @@unique([studentId, semesterId])
-}
-
 model AcademicStaff {
-  id          Int           @id @default(autoincrement())
-  staffNumber String        @unique @db.VarChar(20)
-  firstName   String        @db.VarChar(100)
-  lastName    String        @db.VarChar(100)
-  phone       String?       @db.VarChar(20)
-  title       AcademicTitle @default(ASSISTANT)
+  id          Int      @id @default(autoincrement())
+  staffNumber String   @unique @db.VarChar(20)
+  firstName   String   @db.VarChar(100)
+  lastName    String   @db.VarChar(100)
+  phone       String?  @db.VarChar(20)
+  role        UserRole @default(АСИСТЕНТ)
   facultyId   Int
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
 
   faculty       Faculty        @relation(fields: [facultyId], references: [id])
-  courses       Course[]
-  schedules     Schedule[]
-  events        Event[]
-  announcements Announcement[]
-  materials     Material[]
   user          User?
+  courseGroups  CourseGroup[]
+  announcements Announcement[]
+  events        Event[]
+  materials     Material[]
 }
 
 model Course {
@@ -124,30 +104,41 @@ model Course {
   code        String     @unique @db.VarChar(20)
   description String?    @db.Text
   credits     Int
-  type        CourseType @default(MANDATORY)
-  academicStaffId Int
 
-  academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
+  courseGroups CourseGroup[]
+  materials    Material[]
+}
 
-  courseGroups  CourseGroup[]
-  schedules     Schedule[]
-  events        Event[]
-  announcements Announcement[]
-  materials     Material[]
+model Semester {
+  id           Int            @id @default(autoincrement())
+  academicYear String         @db.VarChar(20)
+  period       SemesterPeriod
+  startDate    DateTime
+  endDate      DateTime
+  isCurrent    Boolean        @default(false)
+
+  courseGroups CourseGroup[]
 }
 
 model CourseGroup {
-  id                 Int @id @default(autoincrement())
-  courseId           Int
-  groupId            Int
-  curriculumSemester Int
+  id              Int @id @default(autoincrement())
+  courseId        Int
+  groupId         Int
+  academicStaffId Int
+  semesterNum     Int
+  semesterId      Int
 
-  course Course @relation(fields: [courseId], references: [id])
-  group  Group  @relation(fields: [groupId], references: [id])
+  course        Course        @relation(fields: [courseId], references: [id])
+  group         Group         @relation(fields: [groupId], references: [id])
+  academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
+  semester      Semester      @relation(fields: [semesterId], references: [id])
 
-  grades Grade[]
+  grades        Grade[]
+  schedules     Schedule[]
+  announcements Announcement[]
+  events        Event[]
 
-  @@unique([courseId, groupId])
+  @@unique([courseId, groupId, semesterId])
 }
 
 model Grade {
@@ -162,75 +153,18 @@ model Grade {
   @@unique([studentId, courseGroupId])
 }
 
-model Semester {
-  id        Int            @id @default(autoincrement())
-  name      String         @db.VarChar(50)
-  period    SemesterPeriod
-  startDate DateTime
-  endDate   DateTime
-  isCurrent Boolean        @default(false)
-
-  studentSemesters StudentSemester[]
-  schedules        Schedule[]
-  events           Event[]
-  announcements    Announcement[]
-}
-
 model Schedule {
-  id              Int        @id @default(autoincrement())
+  id            Int @id @default(autoincrement())
+  courseGroupId Int
 
-  courseId        Int
-  academicStaffId Int
-  semesterId      Int
-  groupId         Int
+  dayOfWeek DayOfWeek
+  startTime String    @db.VarChar(5)
+  endTime   String    @db.VarChar(5)
+  room      String    @db.VarChar(50)
 
-  dayOfWeek       DayOfWeek
-  startTime       String     @db.VarChar(5)
-  endTime         String     @db.VarChar(5)
-  room            String     @db.VarChar(50)
-  type            LessonType @default(ЛЕКЦИЯ)
+  type LessonType @default(ЛЕКЦИЯ)
 
-  course        Course        @relation(fields: [courseId], references: [id])
-  academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
-  semester      Semester      @relation(fields: [semesterId], references: [id])
-  group         Group         @relation(fields: [groupId], references: [id])
-
-  @@index([groupId])
-
-  @@unique([
-    groupId,
-    semesterId,
-    dayOfWeek,
-    startTime
-  ])
-}
-
-model Building {
-  id            Int      @id @default(autoincrement())
-  number        Int      @unique
-  name          String   @db.VarChar(200)
-  address       String   @db.VarChar(300)
-  latitude      Float
-  longitude     Float
-  googleMapsUrl String?  @db.VarChar(1000)
-}
-
-model Announcement {
-  id              Int              @id @default(autoincrement())
-  message         String           @db.Text
-  type            AnnouncementType @default(ИНФОРМАЦИЯ)
-  validTo         DateTime
-  academicStaffId Int
-  courseId        Int?
-  groupId         Int?
-  semesterId      Int
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-
-  academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
-  course        Course?       @relation(fields: [courseId], references: [id])
-  group         Group?        @relation(fields: [groupId], references: [id])
-  semester      Semester      @relation(fields: [semesterId], references: [id])
+  courseGroup CourseGroup @relation(fields: [courseGroupId], references: [id])
 }
 
 model Material {
@@ -247,6 +181,20 @@ model Material {
   academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
 }
 
+model Announcement {
+  id              Int              @id @default(autoincrement())
+  message         String           @db.Text
+  type            AnnouncementType @default(ИНФОРМАЦИЯ)
+  validTo         DateTime
+  academicStaffId Int
+  courseGroupId   Int?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
+  courseGroup   CourseGroup?  @relation(fields: [courseGroupId], references: [id])
+}
+
 model Event {
   id              Int       @id @default(autoincrement())
   title           String    @db.VarChar(300)
@@ -255,26 +203,22 @@ model Event {
   startTime       String?   @db.VarChar(5)
   endTime         String?   @db.VarChar(5)
   room            String?   @db.VarChar(50)
-  courseId        Int
+  courseGroupId   Int
   academicStaffId Int
-  groupId         Int?
-  semesterId      Int
   createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
 
-  course        Course        @relation(fields: [courseId], references: [id])
+  courseGroup   CourseGroup   @relation(fields: [courseGroupId], references: [id])
   academicStaff AcademicStaff @relation(fields: [academicStaffId], references: [id])
-  group         Group?        @relation(fields: [groupId], references: [id])
-  semester      Semester      @relation(fields: [semesterId], references: [id])
 }
 
-model PushToken {
-  id        Int      @id @default(autoincrement())
-  token     String   @unique @db.VarChar(200)
-  userId    Int
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Building {
+  id            Int     @id @default(autoincrement())
+  number        Int     @unique
+  name          String  @db.VarChar(200)
+  address       String  @db.VarChar(300)
+  latitude      Float
+  longitude     Float
+  googleMapsUrl String? @db.VarChar(1000)
 }
 
 enum AnnouncementType {
@@ -286,41 +230,22 @@ enum AnnouncementType {
 }
 
 enum UserRole {
-  PROFESSOR
-  ASSOCIATE_PROFESSOR
-  SENIOR_ASSISTANT
-  ASSISTANT
-  STUDENT
+  ПРОФЕСОР
+  ДОЦЕНТ
+  ГЛАВЕН_АСИСТЕНТ
+  АСИСТЕНТ
+  СТУДЕНТ
 }
 
 enum Degree {
-  BACHELOR
-  MASTER
-  DOCTORATE
-}
-
-enum StudentStatus {
-  ACTIVE
-  GRADUATED
-  SUSPENDED
-  DROPPED
-}
-
-enum AcademicTitle {
-  ASSISTANT
-  SENIOR_ASSISTANT
-  ASSOCIATE_PROFESSOR
-  PROFESSOR
-}
-
-enum CourseType {
-  MANDATORY
-  ELECTIVE
+  БАКАЛАВЪР
+  МАГИСТЪР
+  ДОКТОРАНТ
 }
 
 enum SemesterPeriod {
-  WINTER
-  SUMMER
+  ЗИМЕН
+  ЛЕТЕН
 }
 
 enum DayOfWeek {

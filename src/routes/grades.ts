@@ -4,7 +4,7 @@ import type { AuthenticatedRequest } from "../middleware/auth.ts";
 import { getCoursesWithStudents, getStudentsForCourseGroup, setGrade, getMyGrades } from "../services/gradeService.ts";
 import { prisma } from "../prisma.ts";
 
-const STAFF_ROLES = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
+const STAFF_ROLES = ["ПРОФЕСОР", "ДОЦЕНТ", "ГЛАВЕН_АСИСТЕНТ", "АСИСТЕНТ"];
 
 export const gradesRouter = Router();
 
@@ -66,7 +66,7 @@ gradesRouter.put("/", authenticate, async (req, res) => {
 
 gradesRouter.get("/my", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
-  if (role !== "STUDENT") {
+  if (role !== "СТУДЕНТ") {
     return res.status(403).json({ error: "Only students can access this endpoint" });
   }
   const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { studentId: true } });

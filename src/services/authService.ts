@@ -1,4 +1,5 @@
 import { prisma } from "../prisma.ts";
+import { UserRole } from "@prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import type { StringValue } from "ms";
@@ -54,7 +55,7 @@ export async function registerUser(
   });
   const academicStaff = await prisma.academicStaff.findUnique({
     where: { staffNumber: identifierNumber },
-    select: { id: true, firstName: true, lastName: true, title: true },
+    select: { id: true, firstName: true, lastName: true, role: true },
   });
 
   if (!student && !academicStaff) {
@@ -69,7 +70,7 @@ export async function registerUser(
     return { error: "Names do not match the records for this identifier", status: 403 };
   }
 
-  const role = student ? "STUDENT" : academicStaff!.title;
+  const role = student ? UserRole.СТУДЕНТ : academicStaff!.role;
 
   const existingByLinkedRecord = await prisma.user.findFirst({
     where: student ? { studentId: student.id } : { academicStaffId: academicStaff!.id },

@@ -33,7 +33,7 @@ interface StaffCourse {
   semester: number;
 }
 
-const STAFF_ROLES = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
+const STAFF_ROLES = ["ПРОФЕСОР", "ДОЦЕНТ", "ГЛАВЕН_АСИСТЕНТ", "АСИСТЕНТ"];
 
 function fileTypeLabel(type: string) {
   return type.toUpperCase();

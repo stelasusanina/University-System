@@ -6,7 +6,7 @@ import { uploadMaterial, getMaterialsForCourse, getMaterialsByStaff, deleteMater
 import { upload } from "../utils/upload.ts";
 import { prisma } from "../prisma.ts";
 
-const STAFF_ROLES = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
+const STAFF_ROLES = ["ПРОФЕСОР", "ДОЦЕНТ", "ГЛАВЕН_АСИСТЕНТ", "АСИСТЕНТ"];
 
 export const materialsRouter = Router();
 
@@ -115,7 +115,7 @@ materialsRouter.delete("/:id", authenticate, async (req, res) => {
 
 materialsRouter.get("/courses", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
-  if (role !== "STUDENT") {
+  if (role !== "СТУДЕНТ") {
     return res.status(403).json({ error: "Only students can access this endpoint" });
   }
   const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { studentId: true } });

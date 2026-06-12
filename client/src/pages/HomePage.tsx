@@ -19,7 +19,7 @@ const ANNOUNCEMENT_CSS: Record<string, string> = {
   "СМЯНА_НА_ЗАЛА": "room_change",
   "СПЕШНО": "urgent",
 };
-const STAFF_ROLES = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
+const STAFF_ROLES = ["ПРОФЕСОР", "ДОЦЕНТ", "ГЛАВЕН_АСИСТЕНТ", "АСИСТЕНТ"];
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -244,7 +244,7 @@ export default function HomePage() {
           </section>
 
           <section className="announcements-card">
-            <h2>{user?.role === "STUDENT" ? "Съобщения" : "Мои съобщения"}</h2>
+            <h2>{user?.role === "СТУДЕНТ" ? "Съобщения" : "Мои съобщения"}</h2>
             {announcements.length > 0 ? (
               announcements.map((a) => (
                 <div key={a.id} className={`announcement-item announcement-${ANNOUNCEMENT_CSS[a.type] ?? a.type.toLowerCase()}`}>

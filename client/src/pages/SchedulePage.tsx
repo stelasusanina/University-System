@@ -20,7 +20,7 @@ export default function SchedulePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const isStudent = user?.role === "STUDENT";
+  const isStudent = user?.role === "СТУДЕНТ";
 
   useEffect(() => {
     let isMounted = true;

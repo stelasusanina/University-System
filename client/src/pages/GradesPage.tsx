@@ -4,7 +4,7 @@ import { api } from "../services/api";
 import type { CourseWithGroups, StudentRow, SemesterGrades, GradeEntry } from "@shared/types/grades";
 import Navbar from "../components/Navbar";
 
-const STAFF_ROLES = ["PROFESSOR", "ASSOCIATE_PROFESSOR", "SENIOR_ASSISTANT", "ASSISTANT"];
+const STAFF_ROLES = ["ПРОФЕСОР", "ДОЦЕНТ", "ГЛАВЕН_АСИСТЕНТ", "АСИСТЕНТ"];
 
 function gradeColor(grade: number) {
   if (grade >= 5) return "grade-excellent";
