@@ -1,3 +1,11 @@
+export const EVENT_TYPE_LABELS: Record<string, string> = {
+  КОНТРОЛНА: "Контролна",
+  ИЗПИТ: "Изпит",
+  ЗАДАНИЕ: "Задание",
+  ЗАЩИТА_НА_ПРОЕКТ: "Защита на проект",
+  ДРУГО: "Друго",
+};
+
 export type EventItem = {
   id: number;
   title: string;

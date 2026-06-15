@@ -7,8 +7,8 @@ if (!process.env.JWT_SECRET) {
 const JWT_SECRET = process.env.JWT_SECRET;
 
 type AuthUser = {
-  userId?: number;
-  email?: string;
+  userId: number;
+  email: string;
   role: string;
 };
 
@@ -22,13 +22,13 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
   const header = req.headers.authorization;
 
   if (!header || !header.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "No token provided" });
+    return res.status(401).json({ error: "Липсва токен за автентикация" });
   }
 
   const token = header.split(" ")[1];
 
   if (!token) {
-    return res.status(401).json({ error: "No token provided" });
+    return res.status(401).json({ error: "Липсва токен за автентикация" });
   }
 
   try {
@@ -36,6 +36,6 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
     (req as AuthenticatedRequest).user = decoded;
     next();
   } catch (err) {
-    return res.status(401).json({ error: "Invalid or expired token" });
+    return res.status(401).json({ error: "Невалиден или изтекъл токен" });
   }
 }

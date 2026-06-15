@@ -33,6 +33,7 @@
   display: flex;
   gap: 1.5rem;
   align-items: flex-start;
+  margin-top: 1.5rem;
 }
 
 .materials-sidebar {
@@ -178,4 +179,37 @@
   gap: 0.5rem;
   flex-shrink: 0;
   align-items: flex-start;
+}
+
+.material-actions .btn-primary,
+.material-actions .btn-secondary,
+.material-actions .btn-danger,
+.material-actions a.btn-primary,
+.material-actions a.btn-secondary {
+  width: 100px;
+  text-align: center;
+  padding: 0.35rem 0 !important;
+  font-size: 0.85rem !important;
+  box-sizing: border-box;
+  display: inline-block;
+}
+
+.mat-btn {
+  display: inline-block;
+  width: 100px;
+  text-align: center;
+  padding: 0.15rem 0;
+  font-size: 0.85rem;
+  box-sizing: border-box;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+}
+
+.mat-btn-blue:hover {
+  background: #2563eb;
 }

@@ -10,7 +10,7 @@ export async function createAnnouncement(
   });
 
   if (!user?.academicStaff) {
-    return { error: "Only academic staff can create announcements", status: 403 };
+    return { error: "Само академичен персонал може да създава обявления", status: 403 };
   }
 
   const announcement = await prisma.announcement.create({
@@ -51,7 +51,7 @@ export async function getAnnouncementsForUser(
   });
 
   if (!user) {
-    return { error: "User not found", status: 404 };
+    return { error: "Потребителят не е намерен", status: 404 };
   }
 
   const now = new Date();
@@ -89,6 +89,7 @@ export async function getAnnouncementsForUser(
         type: true,
         validTo: true,
         createdAt: true,
+        updatedAt: true,
         courseGroup: { select: { course: { select: { code: true, name: true } } } },
         academicStaff: { select: { firstName: true, lastName: true, role: true } },
       },
@@ -110,6 +111,7 @@ export async function getAnnouncementsForUser(
         type: true,
         validTo: true,
         createdAt: true,
+        updatedAt: true,
         courseGroup: {
           select: {
             course: { select: { code: true, name: true } },
@@ -123,7 +125,7 @@ export async function getAnnouncementsForUser(
     return { data: announcements };
   }
 
-  return { error: "No student or staff profile linked", status: 403 };
+  return { error: "Не е намерен свързан профил на студент или персонал", status: 403 };
 }
 
 export async function updateAnnouncement(
@@ -137,7 +139,7 @@ export async function updateAnnouncement(
   });
 
   if (!user?.academicStaff) {
-    return { error: "Only academic staff can update announcements", status: 403 };
+    return { error: "Само академичен персонал може да редактира обявления", status: 403 };
   }
 
   const existing = await prisma.announcement.findUnique({
@@ -146,11 +148,11 @@ export async function updateAnnouncement(
   });
 
   if (!existing) {
-    return { error: "Announcement not found", status: 404 };
+    return { error: "Обявлението не е намерено", status: 404 };
   }
 
   if (existing.academicStaffId !== user.academicStaff.id) {
-    return { error: "You can only edit your own announcements", status: 403 };
+    return { error: "Можете да редактирате само собствените си обявления", status: 403 };
   }
 
   const announcement = await prisma.announcement.update({
@@ -189,7 +191,7 @@ export async function deleteAnnouncement(
   });
 
   if (!user?.academicStaff) {
-    return { error: "Only academic staff can delete announcements", status: 403 };
+    return { error: "Само академичен персонал може да изтрива обявления", status: 403 };
   }
 
   const existing = await prisma.announcement.findUnique({
@@ -198,11 +200,11 @@ export async function deleteAnnouncement(
   });
 
   if (!existing) {
-    return { error: "Announcement not found", status: 404 };
+    return { error: "Обявлението не е намерено", status: 404 };
   }
 
   if (existing.academicStaffId !== user.academicStaff.id) {
-    return { error: "You can only delete your own announcements", status: 403 };
+    return { error: "Можете да изтривате само собствените си обявления", status: 403 };
   }
 
   await prisma.announcement.delete({ where: { id: announcementId } });
@@ -218,7 +220,7 @@ export async function getStaffFormOptions(
   });
 
   if (!user?.academicStaff) {
-    return { error: "Only academic staff can access form options", status: 403 };
+    return { error: "Само академичен персонал може да достъпва тези опции", status: 403 };
   }
 
   const courseGroups = await prisma.courseGroup.findMany({

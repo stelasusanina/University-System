@@ -10,7 +10,7 @@ export async function getEventsForUser(userId: number): Promise<{ error: string;
   });
 
   if (!user) {
-    return { error: "User not found", status: 404 };
+    return { error: "Потребителят не е намерен", status: 404 };
   }
 
   const currentSemester = await prisma.semester.findFirst({
@@ -79,7 +79,7 @@ export async function getEventsForUser(userId: number): Promise<{ error: string;
       orderBy: { date: "asc" },
     });
   } else {
-    return { error: "No student or staff profile linked", status: 403 };
+    return { error: "Не е намерен свързан профил на студент или персонал", status: 403 };
   }
 
   const normalized = events.map((e) => ({
@@ -112,7 +112,7 @@ export async function createEvent(
   });
 
   if (!user?.academicStaff) {
-    return { error: "Only academic staff can create events", status: 403 };
+    return { error: "Само академичен персонал може да създава събития", status: 403 };
   }
 
   const eventDate = new Date(body.date);
@@ -128,11 +128,11 @@ export async function createEvent(
   });
 
   if (!courseGroup) {
-    return { error: "CourseGroup not found", status: 404 };
+    return { error: "Учебната група не е намерена", status: 404 };
   }
 
   if (courseGroup.academicStaffId !== user.academicStaff.id) {
-    return { error: "You are not the lecturer for this course group", status: 403 };
+    return { error: "Не сте преподавател на тази учебна група", status: 403 };
   }
 
   const event = await prisma.event.create({
@@ -176,7 +176,7 @@ export async function deleteEvent(
   });
 
   if (!user?.academicStaff) {
-    return { error: "Only academic staff can delete events", status: 403 };
+    return { error: "Само академичен персонал може да изтрива събития", status: 403 };
   }
 
   const existing = await prisma.event.findUnique({
@@ -185,11 +185,11 @@ export async function deleteEvent(
   });
 
   if (!existing) {
-    return { error: "Event not found", status: 404 };
+    return { error: "Събитието не е намерено", status: 404 };
   }
 
   if (existing.academicStaffId !== user.academicStaff.id) {
-    return { error: "You can only delete your own events", status: 403 };
+    return { error: "Можете да изтривате само собствените си събития", status: 403 };
   }
 
   await prisma.event.delete({ where: { id: eventId } });

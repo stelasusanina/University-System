@@ -56,7 +56,7 @@ export default function MapPage() {
   if (!valid) {
     return (
       <div className="map-page-error">
-        <p>Invalid or missing location parameters.</p>
+        <p>Невалидни или липсващи параметри за местоположение.</p>
       </div>
     );
   }
@@ -65,10 +65,10 @@ export default function MapPage() {
     <div className="map-page">
       <div className="map-page-header">
         <div>
-          <p className="map-page-eyebrow">Building {buildingNumber} · Room location</p>
+          <p className="map-page-eyebrow">Сграда {buildingNumber}</p>
           <h2>{buildingName}</h2>
           {address && <p className="map-page-address">{address}</p>}
-          {room && <p className="map-page-room"><strong>Room:</strong> {room}</p>}
+          {room && <p className="map-page-room">Зала: {room}</p>}
         </div>
       </div>
       <div ref={mapElementRef} className="map-page-map" />

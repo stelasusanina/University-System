@@ -18,10 +18,10 @@ export async function getAcademicStaffProgram(userId: number): Promise<{ error: 
   });
 
   if (!user) {
-    return { error: "User not found", status: 404 };
+    return { error: "Потребителят не е намерен", status: 404 };
   }
   if (!user.academicStaff) {
-    return { error: "Program view is available only for academic staff accounts", status: 403 };
+    return { error: "Програмата е достъпна само за акаунти на академичен персонал", status: 403 };
   }
 
   const currentSemester = await prisma.semester.findFirst({
@@ -31,7 +31,7 @@ export async function getAcademicStaffProgram(userId: number): Promise<{ error: 
   });
 
   if (!currentSemester) {
-    return { error: "No active semester found", status: 404 };
+    return { error: "Няма активен семестър", status: 404 };
   }
 
   const courseGroups = await prisma.courseGroup.findMany({

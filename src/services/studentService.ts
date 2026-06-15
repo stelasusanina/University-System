@@ -24,10 +24,10 @@ export async function getStudentProgram(userId: number): Promise<{ error: string
   });
 
   if (!user) {
-    return { error: "User not found", status: 404 };
+    return { error: "Потребителят не е намерен", status: 404 };
   }
   if (!user.student) {
-    return { error: "Program view is available only for student accounts", status: 403 };
+    return { error: "Програмата е достъпна само за студентски акаунти", status: 403 };
   }
 
   const currentSemester = await prisma.semester.findFirst({
@@ -37,7 +37,7 @@ export async function getStudentProgram(userId: number): Promise<{ error: string
   });
 
   if (!currentSemester) {
-    return { error: "No active semester found", status: 404 };
+    return { error: "Няма активен семестър", status: 404 };
   }
 
   function getBuildingNumberFromRoom(room: string): number | null {

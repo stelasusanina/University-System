@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
 import type { CourseWithGroups, StudentRow, SemesterGrades, GradeEntry } from "@shared/types/grades";
+import { ROLE_LABELS } from "@shared/types/auth";
 import Navbar from "../components/Navbar";
 
 const STAFF_ROLES = ["ПРОФЕСОР", "ДОЦЕНТ", "ГЛАВЕН_АСИСТЕНТ", "АСИСТЕНТ"];
@@ -151,7 +152,7 @@ function StaffGradesView() {
                                         type="number"
                                         min={2}
                                         max={6}
-                                        step={0.5}
+                                        step={0.1}
                                         placeholder="—"
                                         value={editGrade[key] ?? ""}
                                         onChange={(ev) =>
@@ -192,6 +193,7 @@ function StudentGradesView() {
   const [semesters, setSemesters] = useState<SemesterGrades[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [expandedSemester, setExpandedSemester] = useState<number | null>(null);
 
   useEffect(() => {
     api.get<{ semesters: SemesterGrades[] }>("/grades/my")
@@ -210,44 +212,59 @@ function StudentGradesView() {
       )}
 
       {semesters.map((sg) => {
+        const isExpanded = expandedSemester === sg.semester.id;
+        const gradedEntries = sg.grades.filter((e) => e.finalGrade != null);
         const avg =
-          sg.grades.length > 0
-            ? (sg.grades.reduce((s, e) => s + e.finalGrade, 0) / sg.grades.length).toFixed(2)
+          gradedEntries.length > 0
+            ? (gradedEntries.reduce((s, e) => s + e.finalGrade, 0) / gradedEntries.length).toFixed(2)
             : null;
 
         return (
           <div key={sg.semester.id} className="grades-semester-block">
-            <div className="grades-semester-header">
+            <button
+              type="button"
+              className="grades-semester-header grades-semester-toggle"
+              onClick={() => setExpandedSemester(isExpanded ? null : sg.semester.id)}
+            >
               <span className="grades-semester-name">{sg.semester.name}</span>
-              {avg && <span className="grades-avg">Среден успех: <strong>{avg}</strong></span>}
-            </div>
+              <span className="grades-semester-right">
+                {avg && <span className="grades-avg">Среден успех: <strong>{avg}</strong></span>}
+                <span className="accordion-chevron">{isExpanded ? "▲" : "▼"}</span>
+              </span>
+            </button>
 
-            <table className="grades-table">
-              <thead>
-                <tr>
-                  <th>Code</th>
-                  <th>Course</th>
-                  <th>Credits</th>
-                  <th>Lecturer</th>
-                  <th>Grade</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sg.grades.map((e: GradeEntry) => (
-                  <tr key={e.id}>
-                    <td><span className="accordion-course-code">{e.course.code}</span></td>
-                    <td>{e.course.name}</td>
-                    <td>{e.course.credits}</td>
-                    <td>{e.course.academicStaff.role} {e.course.academicStaff.lastName}</td>
-                    <td>
-                      <span className={`grade-value ${gradeColor(e.finalGrade)}`}>
-                        {e.finalGrade}
-                      </span>
-                    </td>
+            {isExpanded && (
+              <table className="grades-table">
+                <thead>
+                  <tr>
+                    <th>Код</th>
+                    <th>Дисциплина</th>
+                    <th>Кредити</th>
+                    <th>Преподавател</th>
+                    <th>Оценка</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {sg.grades.map((e: GradeEntry) => (
+                    <tr key={e.id ?? e.course.code}>
+                      <td><span className="accordion-course-code">{e.course.code}</span></td>
+                      <td>{e.course.name}</td>
+                      <td>{e.course.credits}</td>
+                      <td>{ROLE_LABELS[e.course.academicStaff.role] ?? e.course.academicStaff.role} {e.course.academicStaff.lastName}</td>
+                      <td>
+                        {e.finalGrade != null ? (
+                          <span className={`grade-value ${gradeColor(e.finalGrade)}`}>
+                            {e.finalGrade}
+                          </span>
+                        ) : (
+                          <span className="grade-value" style={{ color: "#94a3b8" }}>-</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         );
       })}

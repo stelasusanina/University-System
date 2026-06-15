@@ -11,11 +11,11 @@ export const gradesRouter = Router();
 gradesRouter.get("/courses", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
   if (!STAFF_ROLES.includes(role)) {
-    return res.status(403).json({ error: "Only academic staff can access grades" });
+    return res.status(403).json({ error: "Само академичен персонал може да достъпва оценките" });
   }
   const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { academicStaffId: true } });
   if (!userRecord?.academicStaffId) {
-    return res.status(403).json({ error: "Academic staff record not found" });
+    return res.status(403).json({ error: "Не е намерен запис на академичен персонал" });
   }
   const result = await getCoursesWithStudents(userRecord.academicStaffId);
   if ("error" in result) {
@@ -27,15 +27,15 @@ gradesRouter.get("/courses", authenticate, async (req, res) => {
 gradesRouter.get("/course-group/:courseGroupId", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
   if (!STAFF_ROLES.includes(role)) {
-    return res.status(403).json({ error: "Only academic staff can access grades" });
+    return res.status(403).json({ error: "Само академичен персонал може да достъпва оценките" });
   }
   const courseGroupId = parseInt(req.params.courseGroupId as string);
   if (isNaN(courseGroupId)) {
-    return res.status(400).json({ error: "Invalid courseGroupId" });
+    return res.status(400).json({ error: "Невалиден идентификатор на учебна група" });
   }
   const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { academicStaffId: true } });
   if (!userRecord?.academicStaffId) {
-    return res.status(403).json({ error: "Academic staff record not found" });
+    return res.status(403).json({ error: "Не е намерен запис на академичен персонал" });
   }
   const result = await getStudentsForCourseGroup(courseGroupId, userRecord.academicStaffId);
   if ("error" in result) {
@@ -47,15 +47,15 @@ gradesRouter.get("/course-group/:courseGroupId", authenticate, async (req, res) 
 gradesRouter.put("/", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
   if (!STAFF_ROLES.includes(role)) {
-    return res.status(403).json({ error: "Only academic staff can set grades" });
+    return res.status(403).json({ error: "Само академичен персонал може да нанася оценки" });
   }
   const { studentId, courseGroupId, grade } = req.body as { studentId?: number; courseGroupId?: number; grade?: number | null };
   if (!studentId || !courseGroupId) {
-    return res.status(400).json({ error: "studentId and courseGroupId are required" });
+    return res.status(400).json({ error: "studentId и courseGroupId са задължителни" });
   }
   const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { academicStaffId: true } });
   if (!userRecord?.academicStaffId) {
-    return res.status(403).json({ error: "Academic staff record not found" });
+    return res.status(403).json({ error: "Не е намерен запис на академичен персонал" });
   }
   const result = await setGrade(studentId, courseGroupId, userRecord.academicStaffId, grade ?? null);
   if ("error" in result) {
@@ -67,11 +67,11 @@ gradesRouter.put("/", authenticate, async (req, res) => {
 gradesRouter.get("/my", authenticate, async (req, res) => {
   const { userId, role } = (req as AuthenticatedRequest).user;
   if (role !== "СТУДЕНТ") {
-    return res.status(403).json({ error: "Only students can access this endpoint" });
+    return res.status(403).json({ error: "Само студенти могат да достъпят тази функционалност" });
   }
   const userRecord = await prisma.user.findUnique({ where: { id: userId! }, select: { studentId: true } });
   if (!userRecord?.studentId) {
-    return res.status(403).json({ error: "Student record not found" });
+    return res.status(403).json({ error: "Не е намерен запис на студент" });
   }
   const result = await getMyGrades(userRecord.studentId);
   if ("error" in result) {

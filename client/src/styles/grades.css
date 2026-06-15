@@ -8,7 +8,7 @@
   font-size: 1.5rem;
   font-weight: 700;
   color: #1a1a2e;
-  margin-bottom: 0.25rem;
+  margin-bottom: 1rem;
 }
 
 .grades-semester-block {
@@ -20,6 +20,28 @@
   align-items: center;
   gap: 1rem;
   margin-bottom: 0.75rem;
+}
+
+.grades-semester-toggle {
+  width: 100%;
+  justify-content: space-between;
+  background: #f0f4ff;
+  border: 1px solid #dde4f7;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  cursor: pointer;
+  text-align: left;
+  margin-bottom: 0;
+}
+
+.grades-semester-toggle:hover {
+  background: #e5ebff;
+}
+
+.grades-semester-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .grades-semester-name {
@@ -41,7 +63,15 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  table-layout: fixed;
+  margin-top: 1rem;
 }
+
+.grades-table th:nth-child(1) { width: 15%; }
+.grades-table th:nth-child(2) { width: 33%; }
+.grades-table th:nth-child(3) { width: 10%; }
+.grades-table th:nth-child(4) { width: 30%; }
+.grades-table th:nth-child(5) { width: 12%; }
 
 .grades-table th {
   background: #f0f4ff;
@@ -57,6 +87,8 @@
   border-bottom: 1px solid #f0f0f0;
   color: #333;
   vertical-align: middle;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .grades-table tr:last-child td {

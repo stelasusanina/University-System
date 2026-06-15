@@ -33,6 +33,7 @@ export default function ManageAnnouncementsPage() {
   const [type, setType] = useState("ИНФОРМАЦИЯ");
   const [validTo, setValidTo] = useState("");
   const [courseGroupId, setCourseGroupId] = useState<number | "">("");
+  const [selectedGroupKey, setSelectedGroupKey] = useState("");
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -60,6 +61,7 @@ export default function ManageAnnouncementsPage() {
     setType("ИНФОРМАЦИЯ");
     setValidTo("");
     setCourseGroupId("");
+    setSelectedGroupKey("");
     setFormError("");
     setEditingId(null);
     setShowForm(false);
@@ -125,7 +127,7 @@ export default function ManageAnnouncementsPage() {
 
       <main className="home-main">
         <div className="manage-announcements-header">
-          <h1>Управление на съобщения</h1>
+          <h2>Управление на съобщения</h2>
           {!showForm && (
             <button type="button" className="btn-primary" onClick={() => setShowForm(true)}>
               + Ново съобщение
@@ -160,16 +162,50 @@ export default function ManageAnnouncementsPage() {
               <textarea rows={3} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Напишете вашето съобщение..." required />
             </div>
 
-            <div className="form-group">
-              <label>Група (по избор)</label>
-              <select value={courseGroupId} onChange={(e) => setCourseGroupId(e.target.value ? Number(e.target.value) : "")}>
-                <option value="">Всички групи</option>
-                {courseGroups.map((cg) => (
-                  <option key={cg.id} value={cg.id}>
-                    {cg.course.code} — {cg.group.specialty.name}, Курс {cg.group.studyYear}, Група {cg.group.number}
-                  </option>
-                ))}
-              </select>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Група *</label>
+                <select
+                  value={selectedGroupKey}
+                  onChange={(e) => {
+                    setSelectedGroupKey(e.target.value);
+                    setCourseGroupId("");
+                  }}
+                  required
+                >
+                  <option value="">Изберете група...</option>
+                  {[...new Map(courseGroups.map((cg) => {
+                    const key = `${cg.group.studyYear}-${cg.group.number}`;
+                    return [key, cg];
+                  })).values()].map((cg) => {
+                    const key = `${cg.group.studyYear}-${cg.group.number}`;
+                    return (
+                      <option key={key} value={key}>
+                        Курс {cg.group.studyYear}, Група {cg.group.number}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Предмет *</label>
+                <select
+                  value={courseGroupId}
+                  onChange={(e) => setCourseGroupId(e.target.value ? Number(e.target.value) : "")}
+                  disabled={!selectedGroupKey}
+                  required
+                >
+                  <option value="">Изберете предмет...</option>
+                  {courseGroups
+                    .filter((cg) => `${cg.group.studyYear}-${cg.group.number}` === selectedGroupKey)
+                    .map((cg) => (
+                      <option key={cg.id} value={cg.id}>
+                        {cg.course.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
             </div>
 
             <div className="form-actions">

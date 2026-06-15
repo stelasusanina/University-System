@@ -1,42 +1,62 @@
-import axios from "axios";
 import type { LoginRequest, LoginResponse, RegisterRequest } from "@shared/types/auth";
 
-const client = axios.create({
-  baseURL: "http://localhost:3000",
-});
+const API_URL = "http://localhost:3000";
 
-client.interceptors.request.use((config) => {
+async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
-client.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    const message =
-      err.response?.data?.error || err.message || `HTTP ${err.response?.status}`;
-    return Promise.reject(new Error(message));
-  },
-);
+  const res = await fetch(`${API_URL}${endpoint}`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    ...options,
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: "Request failed" }));
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
+    throw new Error(error.error || `HTTP ${res.status}`);
+  }
+
+  return res.json();
+}
+
+async function requestForm<T>(endpoint: string, form: FormData): Promise<T> {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_URL}${endpoint}`, {
+    method: "POST",
+    headers: {
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: form,
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: "Request failed" }));
+    throw new Error(error.error || `HTTP ${res.status}`);
+  }
+
+  return res.json();
+}
 
 export const api = {
-  get: <T>(endpoint: string) =>
-    client.get<T>(endpoint).then((res) => res.data),
+  get: <T>(endpoint: string) => request<T>(endpoint),
   post: <T>(endpoint: string, data: unknown) =>
-    client.post<T>(endpoint, data).then((res) => res.data),
+    request<T>(endpoint, { method: "POST", body: JSON.stringify(data) }),
   put: <T>(endpoint: string, data: unknown) =>
-    client.put<T>(endpoint, data).then((res) => res.data),
+    request<T>(endpoint, { method: "PUT", body: JSON.stringify(data) }),
   delete: <T>(endpoint: string) =>
-    client.delete<T>(endpoint).then((res) => res.data),
+    request<T>(endpoint, { method: "DELETE" }),
   postForm: <T>(endpoint: string, form: FormData) =>
-    client
-      .post<T>(endpoint, form, { headers: { "Content-Type": "multipart/form-data" } })
-      .then((res) => res.data),
+    requestForm<T>(endpoint, form),
   login: (data: LoginRequest) =>
-    client.post<LoginResponse>("/auth/login", data).then((res) => res.data),
+    request<LoginResponse>("/auth/login", { method: "POST", body: JSON.stringify(data) }),
   register: (data: RegisterRequest) =>
-    client.post<LoginResponse>("/auth/register", data).then((res) => res.data),
+    request<LoginResponse>("/auth/register", { method: "POST", body: JSON.stringify(data) }),
 };

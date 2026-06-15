@@ -19,7 +19,7 @@ export async function uploadMaterial(input: UploadMaterialInput) {
     where: { courseId: input.courseId, academicStaffId: input.academicStaffId },
   });
   if (!courseGroup) {
-    throw new Error("Course not found or you are not the assigned lecturer for this course");
+    throw new Error("Курсът не е намерен или не сте лектор на този курс");
   }
 
   const fileType = extractFileType(input.originalName);
@@ -70,10 +70,10 @@ export async function deleteMaterial(
 ): Promise<{ error: string; status: number } | { success: true }> {
   const material = await prisma.material.findUnique({ where: { id: materialId } });
   if (!material) {
-    return { error: "Material not found", status: 404 };
+    return { error: "Материалът не е намерен", status: 404 };
   }
   if (material.academicStaffId !== academicStaffId) {
-    return { error: "You can only delete your own materials", status: 403 };
+    return { error: "Можете да изтривате само собствените си материали", status: 403 };
   }
   await prisma.material.delete({ where: { id: materialId } });
   return { success: true };
@@ -106,21 +106,9 @@ export async function getCoursesWithMaterialsForStudent(studentId: number) {
     return null;
   }
 
-  const currentSemester = await prisma.semester.findFirst({
-    where: { isCurrent: true },
-    orderBy: [{ startDate: "desc" }],
-    select: { id: true },
-  });
-  if (!currentSemester) {
-    return null;
-  }
-
   const courseGroups = await prisma.courseGroup.findMany({
-    where: {
-      groupId: student.groupId,
-      semesterId: currentSemester.id,
-    },
-    orderBy: [{ course: { name: "asc" } }],
+    where: { groupId: student.groupId },
+    orderBy: [{ semesterNum: "asc" }, { course: { name: "asc" } }],
     select: {
       semesterNum: true,
       course: {
@@ -142,6 +130,7 @@ export async function getCoursesWithMaterialsForStudent(studentId: number) {
         },
       },
     },
+    distinct: ["courseId"],
   });
 
   const courses = courseGroups.map(({ semesterNum, course }) => ({

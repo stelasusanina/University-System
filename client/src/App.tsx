@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -8,6 +8,7 @@ import ManageAnnouncementsPage from "./pages/ManageAnnouncementsPage";
 import MaterialsPage from "./pages/MaterialsPage";
 import GradesPage from "./pages/GradesPage";
 import MapPage from "./pages/MapPage";
+import NotFoundPage from "./pages/NotFoundPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./styles/base.css";
 import "./styles/layout.css";
@@ -25,7 +26,14 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/map" element={<MapPage />} />
+          <Route
+            path="/map"
+            element={
+              <ProtectedRoute>
+                <MapPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/home"
             element={
@@ -66,7 +74,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

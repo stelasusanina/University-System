@@ -28,13 +28,13 @@ export async function loginUser(email: string, password: string, mobile = false)
   });
 
   if (!user) {
-    return { error: "Invalid email or password", status: 401 };
+    return { error: "Невалиден имейл или парола", status: 401 };
   }
 
   const valid = await bcrypt.compare(password, user.password);
 
   if (!valid) {
-    return { error: "Invalid email or password", status: 401 };
+    return { error: "Невалиден имейл или парола", status: 401 };
   }
 
   const person = (user.student ?? user.academicStaff)!;
@@ -49,6 +49,10 @@ export async function registerUser(
   lastName: string,
   password: string,
 ): Promise<{ error: string; status: number } | { token: string; user: { id: number; email: string; role: string; firstName: string; lastName: string }; status: number }> {
+  if (email.length > 200) {
+    return { error: "Имейл адресът е твърде дълъг (максимум 200 символа)", status: 400 };
+  }
+
   const student = await prisma.student.findUnique({
     where: { facultyNumber: identifierNumber },
     select: { id: true, firstName: true, lastName: true },
@@ -59,7 +63,7 @@ export async function registerUser(
   });
 
   if (!student && !academicStaff) {
-    return { error: "No person found with this identifier number", status: 404 };
+    return { error: "Не е намерен потребител с този идентификационен номер", status: 404 };
   }
 
   const person = student ?? academicStaff!;
@@ -67,7 +71,7 @@ export async function registerUser(
     person.firstName.toLowerCase() !== firstName.toLowerCase() ||
     person.lastName.toLowerCase() !== lastName.toLowerCase()
   ) {
-    return { error: "Names do not match the records for this identifier", status: 403 };
+    return { error: "Имената не съвпадат с данните за този идентификационен номер", status: 403 };
   }
 
   const role = student ? UserRole.СТУДЕНТ : academicStaff!.role;
@@ -78,12 +82,12 @@ export async function registerUser(
   });
 
   if (existingByLinkedRecord) {
-    return { error: "An account already exists for this person", status: 409 };
+    return { error: "Вече съществува акаунт за този потребител", status: 409 };
   }
 
   const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
   if (existing) {
-    return { error: "An account already exists for this person", status: 409 };
+    return { error: "Вече съществува акаунт с този имейл адрес", status: 409 };
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);

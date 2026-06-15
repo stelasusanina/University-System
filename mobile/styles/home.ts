@@ -24,13 +24,13 @@ export const homeStyles = StyleSheet.create({
     flex: 1,
   },
   logoutBtn: {
-    backgroundColor: "#e74c3c",
+    backgroundColor: "#fee2e2",
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
   logoutText: {
-    color: "#fff",
+    color: "#991b1b",
     fontWeight: "600",
     fontSize: 14,
   },
@@ -68,8 +68,9 @@ export const homeStyles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     marginBottom: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: "#1e3a8a",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderStyle: "solid",
   },
   eventType: {
     fontSize: 11,
@@ -108,6 +109,11 @@ export const homeStyles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 6,
+  },
+  announcementDates: {
+    flexDirection: "column",
+    gap: 2,
     marginBottom: 6,
   },
   announcementBadge: {

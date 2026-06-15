@@ -9,7 +9,7 @@ export const eventsRouter = Router();
 eventsRouter.get("/dates", authenticate, async (req, res) => {
   const { userId } = (req as AuthenticatedRequest).user;
   if (!userId) {
-    return res.status(401).json({ error: "Invalid token payload" });
+    return res.status(401).json({ error: "Невалидни данни в токена" });
   }
   const result = await getEventsForUser(userId);
   if ("error" in result) {
@@ -21,7 +21,7 @@ eventsRouter.get("/dates", authenticate, async (req, res) => {
 eventsRouter.get("/form-options", authenticate, async (req, res) => {
   const { userId } = (req as AuthenticatedRequest).user;
   if (!userId) {
-    return res.status(401).json({ error: "Invalid token payload" });
+    return res.status(401).json({ error: "Невалидни данни в токена" });
   }
   const result = await getStaffFormOptions(userId);
   if ("error" in result) {
@@ -33,11 +33,11 @@ eventsRouter.get("/form-options", authenticate, async (req, res) => {
 eventsRouter.post("/", authenticate, async (req, res) => {
   const { userId } = (req as AuthenticatedRequest).user;
   if (!userId) {
-    return res.status(401).json({ error: "Invalid token payload" });
+    return res.status(401).json({ error: "Невалидни данни в токена" });
   }
   const { title, type, date, startTime, endTime, room, courseGroupId } = req.body;
   if (!title || !type || !date || !courseGroupId) {
-    return res.status(400).json({ error: "title, type, date, and courseGroupId are required" });
+    return res.status(400).json({ error: "Заглавие, тип, дата и учебна група са задължителни" });
   }
   const result = await createEvent(userId, { title, type, date, startTime, endTime, room, courseGroupId });
   if ("error" in result) {
@@ -49,7 +49,7 @@ eventsRouter.post("/", authenticate, async (req, res) => {
 eventsRouter.delete("/:id", authenticate, async (req, res) => {
   const { userId } = (req as AuthenticatedRequest).user;
   if (!userId) {
-    return res.status(401).json({ error: "Invalid token payload" });
+    return res.status(401).json({ error: "Невалидни данни в токена" });
   }
   const eventId = parseInt(req.params.id as string);
   const result = await deleteEvent(userId, eventId);

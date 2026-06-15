@@ -220,7 +220,7 @@ export default function MaterialsScreen() {
           <View style={styles.filterChips}>
             <TouchableOpacity
               style={[styles.filterChip, selectedSemester === null && styles.filterChipActive]}
-              onPress={() => setSelectedSemester(null)}
+              onPress={() => { setSelectedSemester(null); setFiltersOpen(false); }}
             >
               <Text style={[styles.filterChipText, selectedSemester === null && styles.filterChipTextActive]}>
                 Всички
@@ -233,7 +233,7 @@ export default function MaterialsScreen() {
                 <TouchableOpacity
                   key={key}
                   style={[styles.filterChip, isActive && styles.filterChipActive]}
-                  onPress={() => setSelectedSemester(isActive ? null : key)}
+                  onPress={() => { setSelectedSemester(isActive ? null : key); setFiltersOpen(false); }}
                 >
                   <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
                     {String(s)}

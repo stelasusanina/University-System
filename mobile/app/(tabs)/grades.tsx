@@ -11,25 +11,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { api } from "@/services/api";
 import { gradeStyles as styles } from "@/styles/grades";
 import type { SemesterGrades } from "@shared/types/grades";
+import { ROLE_LABELS } from "@shared/types/auth";
 
-function gradeLabel(grade: number | null): string {
-  if (grade === null) {
-    return "";
-  }
-  if (grade >= 5) {
-    return "Отличен";
-  }
-  if (grade >= 4) {
-    return "Много добър";
-  }
-  if (grade >= 3) {
-    return "Добър";
-  }
-  return "Слаб";
-}
-
-function SemesterBlock({ sg }: { sg: SemesterGrades }) {
-  const [expanded, setExpanded] = useState(true);
+function SemesterBlock({ sg, expanded, onToggle }: { sg: SemesterGrades; expanded: boolean; onToggle: () => void }) {
   const graded = sg.grades.filter((e) => e.finalGrade !== null);
   const gpa = graded.length > 0
     ? (graded.reduce((s, e) => s + e.finalGrade!, 0) / graded.length).toFixed(2)
@@ -37,14 +21,14 @@ function SemesterBlock({ sg }: { sg: SemesterGrades }) {
 
   return (
     <View style={styles.semesterBlock}>
-      <TouchableOpacity style={styles.semesterHeader} onPress={() => setExpanded((v) => !v)}>
+      <TouchableOpacity style={styles.semesterHeader} onPress={onToggle}>
         <View style={styles.semesterTitleRow}>
           <Text style={styles.semesterName}>{sg.semester.name}</Text>
         </View>
         <View style={styles.semesterHeaderRight}>
           {gpa && (
             <View style={styles.gpaBadge}>
-              <Text style={styles.gpaText}>ср. {gpa}</Text>
+              <Text style={styles.gpaText}>ср. успех: {gpa}</Text>
             </View>
           )}
           <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={16} color="#94a3b8" />
@@ -53,20 +37,17 @@ function SemesterBlock({ sg }: { sg: SemesterGrades }) {
 
       {expanded && (
         <View style={styles.enrollmentList}>
-          {sg.grades.map((e) => (
-            <View key={e.id} style={styles.enrollmentRow}>
+          {sg.grades.map((e, index) => (
+            <View key={e.id ?? `no-grade-${index}`} style={styles.enrollmentRow}>
               <View style={styles.enrollmentInfo}>
                 <Text style={styles.courseName} numberOfLines={2}>{e.course.name}</Text>
                 <Text style={styles.courseMeta}>
-                  {e.course.credits} кр. · {e.course.academicStaff.role} {e.course.academicStaff.lastName}
+                  {ROLE_LABELS[e.course.academicStaff.role] ?? e.course.academicStaff.role} {e.course.academicStaff.lastName}
                 </Text>
               </View>
               <View style={styles.gradePill}>
                 <Text style={styles.gradeNumber}>
-                  {e.finalGrade ?? "—"}
-                </Text>
-                <Text style={styles.gradeLabel}>
-                  {gradeLabel(e.finalGrade)}
+                  {e.finalGrade ?? "-"}
                 </Text>
               </View>
             </View>
@@ -79,6 +60,7 @@ function SemesterBlock({ sg }: { sg: SemesterGrades }) {
 
 export default function GradesScreen() {
   const [semesters, setSemesters] = useState<SemesterGrades[]>([]);
+  const [expandedSemester, setExpandedSemester] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -141,9 +123,7 @@ export default function GradesScreen() {
         {overallGpa && (
           <View style={styles.overallGpa}>
             <Text style={styles.overallGpaLabel}>Общ среден успех</Text>
-            <Text style={styles.overallGpaValue}>
-              {overallGpa}
-            </Text>
+            <Text style={styles.overallGpaValue}>{overallGpa}</Text>
           </View>
         )}
       </View>
@@ -154,7 +134,14 @@ export default function GradesScreen() {
           <Text style={styles.emptyText}>Няма намерени оценки</Text>
         </View>
       ) : (
-        semesters.map((sg) => <SemesterBlock key={sg.semester.id} sg={sg} />)
+        semesters.map((sg) => (
+          <SemesterBlock
+            key={sg.semester.id}
+            sg={sg}
+            expanded={expandedSemester === sg.semester.id}
+            onToggle={() => setExpandedSemester(expandedSemester === sg.semester.id ? null : sg.semester.id)}
+          />
+        ))
       )}
     </ScrollView>
   );

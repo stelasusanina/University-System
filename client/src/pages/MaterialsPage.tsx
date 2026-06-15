@@ -53,11 +53,6 @@ function formatDate(iso: string) {
   });
 }
 
-function previewUrl(url: string): string {
-  return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
-}
-
-
 function StaffMaterialsView() {
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
   const [courses, setCourses] = useState<StaffCourse[]>([]);
@@ -204,11 +199,11 @@ function StaffMaterialsView() {
           </label>
 
           <label>
-            Файл * <span className="hint">(PDF, DOCX, PPTX)</span>
+            Файл * <span className="hint">(DOCX, PPTX)</span>
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf,.docx,.pptx"
+              accept=".docx,.pptx"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
           </label>
@@ -240,7 +235,6 @@ function StaffMaterialsView() {
                 >
                   <span className="accordion-course-code">{course.code}</span>
                   <span className="accordion-course-name">{course.name}</span>
-                  <span className="accordion-meta">Курс {course.year} · Сем {course.semester}</span>
                   <span className="accordion-count">
                     {courseMaterials.length} файл{courseMaterials.length !== 1 ? "а" : ""}
                   </span>
@@ -272,18 +266,17 @@ function StaffMaterialsView() {
                               </div>
                             </div>
                             <div className="material-actions">
-                              <a
-                                href={previewUrl(m.fileUrl)}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <button
+                                type="button"
                                 className="btn-secondary"
+                                onClick={() => window.open(`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(m.fileUrl)}`, "_blank")}
                               >
                                 Преглед
-                              </a>
+                              </button>
                               <a
                                 href={m.fileUrl}
                                 download
-                                className="btn-primary"
+                                className="mat-btn mat-btn-blue"
                               >
                                 Изтегляне
                               </a>
@@ -416,18 +409,17 @@ function StudentMaterialsView() {
                               </div>
                             </div>
                             <div className="material-actions">
-                              <a
-                                href={previewUrl(m.fileUrl)}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <button
+                                type="button"
                                 className="btn-secondary"
+                                onClick={() => window.open(`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(m.fileUrl)}`, "_blank")}
                               >
                                 Преглед
-                              </a>
+                              </button>
                               <a
                                 href={m.fileUrl}
                                 download
-                                className="btn-secondary"
+                                className="mat-btn mat-btn-blue"
                               >
                                 Изтегляне
                               </a>

@@ -1,3 +1,9 @@
+export const LESSON_TYPE_LABELS: Record<string, string> = {
+  ЛЕКЦИЯ: "Лекция",
+  СЕМИНАРНО_УПРАЖНЕНИЕ: "Семинарно упражнение",
+  ЛАБОРАТОРНО_УПРАЖНЕНИЕ: "Лабораторно упражнение",
+};
+
 export type Building = {
   number: number;
   name: string;

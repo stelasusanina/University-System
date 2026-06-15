@@ -12,14 +12,8 @@ import { api } from "@/services/api";
 import { homeStyles as styles } from "@/styles/home";
 import type { EventItem } from "@shared/types/events";
 import type { Announcement } from "@shared/types/announcements";
-
-const TYPE_COLORS: Record<string, string> = {
-  "ИНФОРМАЦИЯ": "#3b82f6",
-  "ОТМЯНА": "#ef4444",
-  "ЗАКЪСНЕНИЕ": "#f59e0b",
-  "СМЯНА_НА_ЗАЛА": "#8b5cf6",
-  "СПЕШНО": "#dc2626",
-};
+import { ANNOUNCEMENT_TYPE_COLORS } from "@shared/types/announcements";
+import { ROLE_LABELS } from "@shared/types/auth";
 
 export default function HomeScreen() {
   const { user, logout } = useAuth();
@@ -30,6 +24,7 @@ export default function HomeScreen() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [expandedAnnouncement, setExpandedAnnouncement] = useState<number | null>(null);
 
   function loadData() {
     api
@@ -131,41 +126,38 @@ export default function HomeScreen() {
         <Text style={styles.sectionTitle}>Съобщения</Text>
         {announcements.length > 0 ? (
           announcements.map((a) => (
-            <View
+            <TouchableOpacity
               key={a.id}
-              style={[
-                styles.announcementItem,
-              ]}
+              style={styles.announcementItem}
+              onPress={() => setExpandedAnnouncement(expandedAnnouncement === a.id ? null : a.id)}
+              activeOpacity={0.8}
             >
               <View style={styles.announcementHeader}>
                 <Text
                   style={[
                     styles.announcementBadge,
-                    { backgroundColor: TYPE_COLORS[a.type] || "#94a3b8" },
+                    { backgroundColor: ANNOUNCEMENT_TYPE_COLORS[a.type] || "#94a3b8" },
                   ]}
                 >
                   {a.type.replaceAll("_", " ")}
                 </Text>
                 <Text style={styles.announcementTime}>
-                  {new Date(a.createdAt).toLocaleDateString("bg-BG", {
-                    day: "2-digit",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
+                  Валидно до: {new Date(a.validTo).toLocaleDateString("bg-BG", {
+                    day: "2-digit", month: "short", year: "numeric",
                   })}
                 </Text>
               </View>
               <Text style={styles.announcementMessage}>{a.message}</Text>
               {a.academicStaff && (
                 <Text style={styles.announcementAuthor}>
-                  — {a.academicStaff.role} {a.academicStaff.firstName}{" "}
+                  - {ROLE_LABELS[a.academicStaff.role] ?? a.academicStaff.role} {a.academicStaff.firstName}{" "}
                   {a.academicStaff.lastName}
                 </Text>
               )}
               {a.courseGroup?.course && (
                 <Text style={styles.announcementCourse}>{a.courseGroup.course.name}</Text>
               )}
-            </View>
+            </TouchableOpacity>
           ))
         ) : (
           <Text style={styles.noEvents}>Няма съобщения</Text>

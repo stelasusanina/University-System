@@ -2,7 +2,7 @@ import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "./cloudinary.ts";
 
-const ALLOWED_EXTENSIONS = new Set(["pdf", "docx", "pptx"]);
+const ALLOWED_EXTENSIONS = new Set(["docx", "pptx"]);
 
 const storage = new CloudinaryStorage({
   cloudinary,
@@ -24,7 +24,7 @@ export const upload = multer({
     if (ALLOWED_EXTENSIONS.has(ext)) {
       cb(null, true);
     } else {
-      cb(new Error("Only PDF, DOCX and PPTX files are allowed"));
+      cb(new Error("Разрешени са само PDF, DOCX и PPTX файлове"));
     }
   },
   limits: { fileSize: 50 * 1024 * 1024 },

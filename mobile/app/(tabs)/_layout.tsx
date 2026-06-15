@@ -5,16 +5,19 @@ import { useAuth } from "@/context/AuthContext";
 import { useRegisterPushNotifications } from "@/hooks/usePushNotifications";
 
 export default function TabLayout() {
-  const { isAuthenticated, isReady } = useAuth();
+  const { isAuthenticated, isReady, user } = useAuth();
   const router = useRouter();
 
   useRegisterPushNotifications();
 
   useEffect(() => {
-    if (isReady && !isAuthenticated) {
+    if (!isReady) return;
+    if (!isAuthenticated) {
+      router.replace("/login");
+    } else if (user?.role !== "СТУДЕНТ") {
       router.replace("/login");
     }
-  }, [isReady, isAuthenticated]);
+  }, [isReady, isAuthenticated, user]);
 
   if (!isReady) {
     return null;

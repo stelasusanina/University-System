@@ -7,31 +7,34 @@ import { PickerDay, type PickerDayProps } from "@mui/x-date-pickers/PickerDay";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
 import type { EventItem, EventsResponse } from "@shared/types/events";
+import { EVENT_TYPE_LABELS } from "@shared/types/events";
 import type { Announcement } from "@shared/types/announcements";
+import { ANNOUNCEMENT_CSS } from "@shared/types/announcements";
+import { ROLE_LABELS } from "@shared/types/auth";
 import Navbar from "../components/Navbar";
 
-const EVENT_TYPES = ["КОНТРОЛНА", "ИЗПИТ", "ЗАДАНИЕ", "ЗАЩИТА_НА_ПРОЕКТ", "ДРУГО"];
+const EVENT_TYPES = Object.keys(EVENT_TYPE_LABELS);
 
-const ANNOUNCEMENT_CSS: Record<string, string> = {
-  "ИНФОРМАЦИЯ": "info",
-  "ОТМЯНА": "cancellation",
-  "ЗАКЪСНЕНИЕ": "delay",
-  "СМЯНА_НА_ЗАЛА": "room_change",
-  "СПЕШНО": "urgent",
-};
 const STAFF_ROLES = ["ПРОФЕСОР", "ДОЦЕНТ", "ГЛАВЕН_АСИСТЕНТ", "АСИСТЕНТ"];
 
 type CourseGroupOption = {
   id: number;
   semesterNum: number;
   course: { id: number; code: string; name: string };
-  group: { id: number; number: number; studyYear: number; specialty: { id: number; name: string } };
+  group: {
+    id: number;
+    number: number;
+    studyYear: number;
+    specialty: { id: number; name: string };
+  };
 };
 
 export default function HomePage() {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
-  const [highlightedDates, setHighlightedDates] = useState<Set<string>>(new Set());
+  const [highlightedDates, setHighlightedDates] = useState<Set<string>>(
+    new Set(),
+  );
   const [events, setEvents] = useState<EventItem[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
@@ -41,29 +44,39 @@ export default function HomePage() {
   const [courseGroups, setCourseGroups] = useState<CourseGroupOption[]>([]);
   const [formTitle, setFormTitle] = useState("");
   const [formType, setFormType] = useState("КОНТРОЛНА");
-  const [formDate, setFormDate] = useState(selectedDate?.format("YYYY-MM-DD") ?? "");
+  const [formDate, setFormDate] = useState(
+    selectedDate?.format("YYYY-MM-DD") ?? "",
+  );
   const [formStartTime, setFormStartTime] = useState("");
   const [formEndTime, setFormEndTime] = useState("");
   const [formRoom, setFormRoom] = useState("");
   const [formCourseGroupId, setFormCourseGroupId] = useState<number | "">("");
+  const [formSelectedGroupKey, setFormSelectedGroupKey] = useState("");
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   function loadEvents() {
-    api.get<EventsResponse>("/events/dates").then((res) => {
-      setHighlightedDates(new Set(res.dates));
-      setEvents(res.events);
-    }).catch(() => {});
+    api
+      .get<EventsResponse>("/events/dates")
+      .then((res) => {
+        setHighlightedDates(new Set(res.dates));
+        setEvents(res.events);
+      })
+      .catch(() => {});
   }
 
   useEffect(() => {
     loadEvents();
-    api.get<Announcement[]>("/announcements").then(setAnnouncements).catch(() => {});
+    api
+      .get<Announcement[]>("/announcements")
+      .then(setAnnouncements)
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
     if (isStaff) {
-      api.get<{ courseGroups: CourseGroupOption[] }>("/events/form-options")
+      api
+        .get<{ courseGroups: CourseGroupOption[] }>("/events/form-options")
         .then((res) => setCourseGroups(res.courseGroups))
         .catch(() => {});
     }
@@ -77,6 +90,7 @@ export default function HomePage() {
     setFormEndTime("");
     setFormRoom("");
     setFormCourseGroupId("");
+    setFormSelectedGroupKey("");
     setFormError("");
     setShowAddModal(true);
   }
@@ -120,7 +134,9 @@ export default function HomePage() {
   }
 
   const selectedDateStr = selectedDate?.format("YYYY-MM-DD") ?? "";
-  const selectedEvents = events.filter((e) => e.date.split("T")[0] === selectedDateStr);
+  const selectedEvents = events.filter(
+    (e) => e.date.split("T")[0] === selectedDateStr,
+  );
 
   function ScheduleDay(props: PickerDayProps) {
     const { day, outsideCurrentMonth, today, ...other } = props;
@@ -179,12 +195,19 @@ export default function HomePage() {
       <Navbar />
 
       <main className="home-main">
-        <h1 className="home-welcome">Добре дошли, {user?.firstName} {user?.lastName}</h1>
+        <h1 className="home-welcome">
+          Добре дошли, {user?.firstName} {user?.lastName}
+        </h1>
         <div className="home-grid">
           <section className="calendar-card home-calendar-card">
             <div className="calendar-card-header">
               {isStaff && (
-                <button type="button" className="add-event-btn" onClick={openAddModal} title="Добави събитие">
+                <button
+                  type="button"
+                  className="add-event-btn"
+                  onClick={openAddModal}
+                  title="Добави събитие"
+                >
                   + Добави събитие
                 </button>
               )}
@@ -197,18 +220,24 @@ export default function HomePage() {
               />
             </LocalizationProvider>
             <div className="calendar-events-box">
-              <h3>{selectedDate?.format("dddd, D MMMM YYYY")}</h3>
+              <h3>{selectedDate ? new Date(selectedDate.toDate()).toLocaleDateString("bg-BG", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : ""}</h3>
               {selectedEvents.length > 0 ? (
                 selectedEvents.map((event) => (
                   <div key={event.id} className="calendar-event-item">
-                    <span className="calendar-event-type">{event.type}</span>
+                    <span className="calendar-event-type">{EVENT_TYPE_LABELS[event.type] ?? event.type}</span>
                     <strong>{event.course.name}</strong>
                     <span>{event.title}</span>
-                    {event.startTime && <span>{event.startTime}{event.endTime ? `–${event.endTime}` : ""}</span>}
+                    {event.startTime && (
+                      <span>
+                        {event.startTime}
+                        {event.endTime ? ` - ${event.endTime}` : ""}
+                      </span>
+                    )}
                     {event.room && <span>Зала {event.room}</span>}
                     {isStaff && event.group && (
                       <span className="calendar-event-meta">
-                        Курс {event.group.studyYear} · Група {event.group.number}
+                        Курс {event.group.studyYear} · Група{" "}
+                        {event.group.number}
                       </span>
                     )}
                     {isStaff && (
@@ -233,18 +262,47 @@ export default function HomePage() {
             <h2>{user?.role === "СТУДЕНТ" ? "Съобщения" : "Мои съобщения"}</h2>
             {announcements.length > 0 ? (
               announcements.map((a) => (
-                <div key={a.id} className={`announcement-item announcement-${ANNOUNCEMENT_CSS[a.type] ?? a.type.toLowerCase()}`}>
+                <div
+                  key={a.id}
+                  className={`announcement-item announcement-${ANNOUNCEMENT_CSS[a.type] ?? a.type.toLowerCase()}`}
+                >
                   <div className="announcement-header">
-                    <span className={`announcement-badge announcement-badge-${ANNOUNCEMENT_CSS[a.type] ?? a.type.toLowerCase()}`}>{a.type.replaceAll("_", " ")}</span>
-                    <span className="announcement-time">{dayjs(a.createdAt).format("D MMM, HH:mm")}</span>
+                    <span
+                      className={`announcement-badge announcement-badge-${ANNOUNCEMENT_CSS[a.type] ?? a.type.toLowerCase()}`}
+                    >
+                      {a.type.replaceAll("_", " ")}
+                    </span>
+                    <div className="announcement-time">
+                      <span>Публикувано на: {new Date(a.updatedAt ?? a.createdAt).toLocaleString("bg-BG", {
+                        timeZone: "UTC",
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}</span>
+                      <span>Валидно до: {new Date(a.validTo).toLocaleString("bg-BG", {
+                        timeZone: "UTC",
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}</span>
+                    </div>
                   </div>
                   <p className="announcement-message">{a.message}</p>
                   {a.academicStaff && (
                     <span className="announcement-author">
-                      — {a.academicStaff.role} {a.academicStaff.firstName} {a.academicStaff.lastName}
+                      - {ROLE_LABELS[a.academicStaff.role] ?? a.academicStaff.role} {a.academicStaff.firstName}{" "}
+                      {a.academicStaff.lastName}
                     </span>
                   )}
-                  {a.courseGroup?.course && <span className="announcement-course">{a.courseGroup.course.name}</span>}
+                  {a.courseGroup?.course && (
+                    <span className="announcement-course">
+                      {a.courseGroup.course.name}
+                    </span>
+                  )}
                 </div>
               ))
             ) : (
@@ -261,51 +319,119 @@ export default function HomePage() {
             <form onSubmit={handleAddEvent} className="event-form">
               <div className="form-group">
                 <label>Заглавие</label>
-                <input value={formTitle} onChange={(e) => setFormTitle(e.target.value)} required />
+                <input
+                  value={formTitle}
+                  onChange={(e) => setFormTitle(e.target.value)}
+                  required
+                />
               </div>
               <div className="form-row">
                 <div className="form-group">
                   <label>Вид</label>
-                  <select value={formType} onChange={(e) => setFormType(e.target.value)}>
+                  <select
+                    value={formType}
+                    onChange={(e) => setFormType(e.target.value)}
+                  >
                     {EVENT_TYPES.map((t) => (
-                      <option key={t} value={t}>{t.replaceAll("_", " ")}</option>
+                      <option key={t} value={t}>
+                        {EVENT_TYPE_LABELS[t] ?? t}
+                      </option>
                     ))}
                   </select>
                 </div>
                 <div className="form-group">
                   <label>Дата</label>
-                  <input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} required />
+                  <input
+                    type="date"
+                    value={formDate}
+                    onChange={(e) => setFormDate(e.target.value)}
+                    required
+                  />
                 </div>
               </div>
               <div className="form-row">
                 <div className="form-group">
                   <label>Начален час</label>
-                  <input type="time" value={formStartTime} onChange={(e) => setFormStartTime(e.target.value)} />
+                  <input
+                    type="time"
+                    value={formStartTime}
+                    onChange={(e) => setFormStartTime(e.target.value)}
+                  />
                 </div>
                 <div className="form-group">
                   <label>Краен час</label>
-                  <input type="time" value={formEndTime} onChange={(e) => setFormEndTime(e.target.value)} />
+                  <input
+                    type="time"
+                    value={formEndTime}
+                    onChange={(e) => setFormEndTime(e.target.value)}
+                  />
                 </div>
                 <div className="form-group">
                   <label>Зала</label>
-                  <input value={formRoom} onChange={(e) => setFormRoom(e.target.value)} />
+                  <input
+                    value={formRoom}
+                    onChange={(e) => setFormRoom(e.target.value)}
+                  />
                 </div>
               </div>
-              <div className="form-group">
-                <label>Група</label>
-                <select value={formCourseGroupId} onChange={(e) => handleCourseChange(e.target.value ? Number(e.target.value) : "")} required>
-                  <option value="">— изберете група —</option>
-                  {courseGroups.map((cg) => (
-                    <option key={cg.id} value={cg.id}>
-                      {cg.course.code} — {cg.group.specialty.name}, Курс {cg.group.studyYear}, Гр. {cg.group.number}
-                    </option>
-                  ))}
-                </select>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Група *</label>
+                  <select
+                    value={formSelectedGroupKey}
+                    onChange={(e) => {
+                      setFormSelectedGroupKey(e.target.value);
+                      setFormCourseGroupId("");
+                    }}
+                    required
+                  >
+                    <option value="">— изберете група —</option>
+                    {[...new Map(courseGroups.map((cg) => {
+                      const key = `${cg.group.studyYear}-${cg.group.number}`;
+                      return [key, cg];
+                    })).values()].map((cg) => {
+                      const key = `${cg.group.studyYear}-${cg.group.number}`;
+                      return (
+                        <option key={key} value={key}>
+                          Курс {cg.group.studyYear}, Група {cg.group.number}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Предмет *</label>
+                  <select
+                    value={formCourseGroupId}
+                    onChange={(e) => setFormCourseGroupId(e.target.value ? Number(e.target.value) : "")}
+                    disabled={!formSelectedGroupKey}
+                    required
+                  >
+                    <option value="">— изберете предмет —</option>
+                    {courseGroups
+                      .filter((cg) => `${cg.group.studyYear}-${cg.group.number}` === formSelectedGroupKey)
+                      .map((cg) => (
+                        <option key={cg.id} value={cg.id}>
+                          {cg.course.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
               </div>
               {formError && <p className="form-error">{formError}</p>}
               <div className="form-actions">
-                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Отказ</button>
-                <button type="submit" className="btn-primary" disabled={submitting}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowAddModal(false)}
+                >
+                  Отказ
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={submitting}
+                >
                   {submitting ? "Запазване..." : "Добави"}
                 </button>
               </div>

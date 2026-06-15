@@ -9,7 +9,7 @@ pushRouter.post("/", authenticate, async (req, res) => {
   const { userId } = (req as AuthenticatedRequest).user;
   const { token } = req.body;
   if (!token || typeof token !== "string") {
-    return res.status(400).json({ error: "token is required" });
+    return res.status(400).json({ error: "Токенът е задължителен" });
   }
   await registerPushToken(userId!, token);
   return res.json({ success: true });
@@ -18,7 +18,7 @@ pushRouter.post("/", authenticate, async (req, res) => {
 pushRouter.delete("/", authenticate, async (req, res) => {
   const { token } = req.body;
   if (!token || typeof token !== "string") {
-    return res.status(400).json({ error: "token is required" });
+    return res.status(400).json({ error: "Токенът е задължителен" });
   }
   await removePushToken(token);
   return res.json({ success: true });

@@ -49,6 +49,7 @@ export const gradeStyles = StyleSheet.create({
     fontWeight: "800",
     color: "#0f172a",
     letterSpacing: -0.5,
+    paddingTop: 16,
   },
   overallGpa: {
     flexDirection: "row",
@@ -155,12 +156,10 @@ export const gradeStyles = StyleSheet.create({
     minWidth: 64,
   },
   gradeNumber: {
-    fontSize: 18,
-    fontWeight: "800",
+    fontSize: 16,
+    fontWeight: "400",
   },
   gradeLabel: {
-    fontSize: 10,
-    fontWeight: "600",
-    marginTop: 1,
+    display: "none",
   },
 });

@@ -47,6 +47,7 @@ export const scheduleStyles = StyleSheet.create({
     fontWeight: "800",
     color: "#0f172a",
     letterSpacing: -0.5,
+    paddingTop: 16,
   },
   subtitle: {
     fontSize: 13,

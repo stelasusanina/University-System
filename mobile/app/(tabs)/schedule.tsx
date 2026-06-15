@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { api } from "@/services/api";
 import { scheduleStyles as styles } from "@/styles/schedule";
 import type { StudentProgram, CourseWithSchedule, ScheduleEntry } from "@shared/types/schedule";
+import { LESSON_TYPE_LABELS } from "@shared/types/schedule";
 
 const DAYS = [
   { key: "ПОНЕДЕЛНИК", short: "Пон" },
@@ -161,7 +162,7 @@ export default function ScheduleScreen() {
                 </View>
                 <View style={[styles.typeBadge, { backgroundColor: "#f1f5f9" }]}>
                   <Text style={[styles.typeBadgeText, { color: "#64748b" }]}>
-                    {schedule.type}
+                    {LESSON_TYPE_LABELS[schedule.type] ?? schedule.type}
                   </Text>
                 </View>
               </View>

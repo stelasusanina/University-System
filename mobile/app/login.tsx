@@ -33,6 +33,10 @@ export default function LoginScreen() {
 
     try {
       const response = await authService.login({ email, password });
+      if (response.user.role !== "СТУДЕНТ") {
+        setError("Мобилното приложение е достъпно само за студенти.");
+        return;
+      }
       await login(response.token, response.user);
       router.replace("/(tabs)");
     } catch (err) {
