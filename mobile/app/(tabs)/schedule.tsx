@@ -13,6 +13,7 @@ import { api } from "@/services/api";
 import { scheduleStyles as styles } from "@/styles/schedule";
 import type { StudentProgram, CourseWithSchedule, ScheduleEntry } from "@shared/types/schedule";
 import { LESSON_TYPE_LABELS } from "@shared/types/schedule";
+import { ROLE_LABELS } from "@shared/types/auth";
 
 const DAYS = [
   { key: "ПОНЕДЕЛНИК", short: "Пон" },
@@ -172,7 +173,7 @@ export default function ScheduleScreen() {
               <View style={styles.metaRow}>
                 <Ionicons name="person-outline" size={13} color="#94a3b8" />
                 <Text style={styles.metaText}>
-                  {course.lecturer.role} {course.lecturer.firstName} {course.lecturer.lastName}
+                  {ROLE_LABELS[course.lecturer.role] ?? course.lecturer.role} {course.lecturer.firstName} {course.lecturer.lastName}
                 </Text>
               </View>
 
