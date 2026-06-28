@@ -37,7 +37,10 @@ export async function loginUser(email: string, password: string, mobile = false)
     return { error: "Невалиден имейл или парола", status: 401 };
   }
 
-  const person = (user.student ?? user.academicStaff)!;
+  const person = user.student ?? user.academicStaff;
+  if (!person) {
+    return { error: "Невалиден имейл или парола", status: 401 };
+  }
   const token = signToken(user, mobile ? "30d" : "2h");
   return { token, user: { id: user.id, email: user.email, role: user.role, firstName: person.firstName, lastName: person.lastName } };
 }
@@ -48,6 +51,7 @@ export async function registerUser(
   firstName: string,
   lastName: string,
   password: string,
+  phone?: string,
 ): Promise<{ error: string; status: number } | { token: string; user: { id: number; email: string; role: string; firstName: string; lastName: string }; status: number }> {
   if (email.length > 200) {
     return { error: "Имейл адресът е твърде дълъг (максимум 200 символа)", status: 400 };
@@ -91,6 +95,14 @@ export async function registerUser(
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
+
+  if (phone) {
+    if (student) {
+      await prisma.student.update({ where: { id: student.id }, data: { phone } });
+    } else {
+      await prisma.academicStaff.update({ where: { id: academicStaff!.id }, data: { phone } });
+    }
+  }
 
   const user = await prisma.user.create({
     data: {

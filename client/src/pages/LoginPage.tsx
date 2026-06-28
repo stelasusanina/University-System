@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Navigate, Link } from "react-router-dom";
 import { api } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import blueLogo from "@shared/assets/blue_logo.png";
@@ -9,8 +9,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated, isReady } = useAuth();
   const navigate = useNavigate();
+
+  if (isReady && isAuthenticated) {
+    return <Navigate to="/home" replace />;
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

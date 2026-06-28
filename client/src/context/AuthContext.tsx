@@ -24,7 +24,7 @@ function parseJwtPayload(token: string): JwtPayload | null {
       return null;
     }
 
-    return JSON.parse(atob(payload)) as JwtPayload;
+    return JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/"))) as JwtPayload;
   } catch {
     return null;
   }

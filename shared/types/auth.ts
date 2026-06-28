@@ -30,4 +30,5 @@ export type RegisterRequest = {
   firstName: string;
   lastName: string;
   password: string;
+  phone?: string;
 };

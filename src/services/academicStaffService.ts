@@ -1,4 +1,5 @@
 import { prisma } from "../prisma.ts";
+import { getBuildingNumberFromRoom } from "../utils/buildingUtils.ts";
 
 export async function getAcademicStaffProgram(userId: number): Promise<{ error: string; status: number } | { data: Record<string, unknown> }> {
   const user = await prisma.user.findUnique({
@@ -33,6 +34,12 @@ export async function getAcademicStaffProgram(userId: number): Promise<{ error: 
   if (!currentSemester) {
     return { error: "Няма активен семестър", status: 404 };
   }
+
+
+  const buildings = await prisma.building.findMany({
+    select: { number: true, name: true, address: true, latitude: true, longitude: true, googleMapsUrl: true },
+  });
+  const buildingMap = new Map(buildings.map((b) => [b.number, b]));
 
   const courseGroups = await prisma.courseGroup.findMany({
     where: {
@@ -72,7 +79,10 @@ export async function getAcademicStaffProgram(userId: number): Promise<{ error: 
         group: group.number,
         year: group.studyYear,
         semesterNum,
-        schedules,
+        schedules: schedules.map((schedule) => {
+          const num = getBuildingNumberFromRoom(schedule.room);
+          return { ...schedule, building: num !== null ? (buildingMap.get(num) ?? null) : null };
+        }),
       })),
     },
   };

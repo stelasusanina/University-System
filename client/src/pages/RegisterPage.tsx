@@ -9,6 +9,7 @@ export default function RegisterPage() {
   const [identifierNumber, setIdentifierNumber] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -34,6 +35,7 @@ export default function RegisterPage() {
         firstName,
         lastName,
         password,
+        phone: phone || undefined,
       });
       login(response.token, response.user);
       navigate("/dashboard");
@@ -96,6 +98,16 @@ export default function RegisterPage() {
               required
             />
           </div>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="phone">Телефон</label>
+          <input
+            id="phone"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
         </div>
 
         <div className="form-group">

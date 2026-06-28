@@ -26,11 +26,11 @@ authRouter.post("/login", async (req, res) => {
 });
 
 authRouter.post("/register", async (req, res) => {
-  const { email, identifierNumber, firstName, lastName, password } = req.body;
+  const { email, identifierNumber, firstName, lastName, password, phone } = req.body;
   if (!email || !identifierNumber || !firstName || !lastName || !password) {
     return res.status(400).json({ error: "Всички полета са задължителни: имейл, идентификационен номер, имена и парола" });
   }
-  const result = await registerUser(email, identifierNumber, firstName, lastName, password);
+  const result = await registerUser(email, identifierNumber, firstName, lastName, password, phone);
   if ("error" in result) {
     return res.status(result.status).json({ error: result.error });
   }

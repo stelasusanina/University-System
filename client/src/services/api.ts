@@ -15,7 +15,7 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ error: "Request failed" }));
-    if (res.status === 401) {
+    if (res.status === 401 && !endpoint.startsWith("/auth/")) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";

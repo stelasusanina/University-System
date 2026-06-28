@@ -108,7 +108,7 @@ export async function getCoursesWithMaterialsForStudent(studentId: number) {
 
   const courseGroups = await prisma.courseGroup.findMany({
     where: { groupId: student.groupId },
-    orderBy: [{ semesterNum: "asc" }, { course: { name: "asc" } }],
+    orderBy: [{ semesterNum: "desc" }, { course: { name: "asc" } }],
     select: {
       semesterNum: true,
       course: {
@@ -135,7 +135,7 @@ export async function getCoursesWithMaterialsForStudent(studentId: number) {
 
   const courses = courseGroups.map(({ semesterNum, course }) => ({
     ...course,
-    year: student.group.studyYear,
+    year: Math.ceil(semesterNum / 2),
     semester: semesterNum,
   }));
 

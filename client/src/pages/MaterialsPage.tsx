@@ -182,7 +182,7 @@ function StaffMaterialsView() {
               <option value="">Изберете дисциплина…</option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.code} – {c.name} (Курс {c.year}, Сем {c.semester})
+                  {c.code} – {c.name}
                 </option>
               ))}
             </select>

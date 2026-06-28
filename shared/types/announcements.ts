@@ -22,6 +22,7 @@ export type Announcement = {
   createdAt: string;
   updatedAt: string;
   courseGroup?: {
+    id?: number;
     course?: { code: string; name: string } | null;
     group?: { number: number; studyYear: number; specialty: { name: string } } | null;
   } | null;

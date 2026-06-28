@@ -33,7 +33,7 @@ model PushToken {
 model Faculty {
   id          Int     @id @default(autoincrement())
   name        String  @unique @db.VarChar(200)
-  code        String  @unique @db.VarChar(10)
+  code        String  @unique @db.VarChar(5)
   description String? @db.Text
 
   specialties          Specialty[]
@@ -43,7 +43,7 @@ model Faculty {
 model Specialty {
   id        Int    @id @default(autoincrement())
   name      String @db.VarChar(200)
-  code      String @unique @db.VarChar(20)
+  code      String @unique @db.VarChar(5)
   degree    Degree @default(БАКАЛАВЪР)
   years     Int    @default(4)
   facultyId Int
@@ -68,10 +68,10 @@ model Group {
 
 model Student {
   id            Int      @id @default(autoincrement())
-  facultyNumber String   @unique @db.VarChar(20)
+  facultyNumber String   @unique @db.Char(10)
   firstName     String   @db.VarChar(100)
   lastName      String   @db.VarChar(100)
-  phone         String?  @db.VarChar(20)
+  phone         String?  @db.Char(10)
   groupId       Int
   role          UserRole @default(СТУДЕНТ)
 
@@ -83,10 +83,10 @@ model Student {
 
 model AcademicStaff {
   id          Int      @id @default(autoincrement())
-  staffNumber String   @unique @db.VarChar(20)
+  staffNumber String   @unique @db.Char(10)
   firstName   String   @db.VarChar(100)
   lastName    String   @db.VarChar(100)
-  phone       String?  @db.VarChar(20)
+  phone       String?  @db.Char(10)
   role        UserRole @default(АСИСТЕНТ)
   facultyId   Int
 
@@ -101,7 +101,7 @@ model AcademicStaff {
 model Course {
   id          Int        @id @default(autoincrement())
   name        String     @db.VarChar(200)
-  code        String     @unique @db.VarChar(20)
+  code        String     @unique @db.VarChar(5)
   description String?    @db.Text
   credits     Int
 

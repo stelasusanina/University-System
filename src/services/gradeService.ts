@@ -3,36 +3,44 @@ import { prisma } from "../prisma.ts";
 export async function getCoursesWithStudents(
   academicStaffId: number,
 ): Promise<{ error: string; status: number } | { data: unknown }> {
-  const currentSemester = await prisma.semester.findFirst({
-    where: { isCurrent: true },
-    orderBy: [{ startDate: "desc" }],
-    select: { id: true, academicYear: true, period: true },
-  });
-  if (!currentSemester) {
-    return { error: "Няма активен семестър", status: 404 };
-  }
-
   const courseGroups = await prisma.courseGroup.findMany({
-    where: { academicStaffId, semesterId: currentSemester.id },
-    orderBy: [{ course: { name: "asc" } }],
+    where: { academicStaffId },
+    orderBy: [{ semester: { startDate: "desc" } }, { course: { name: "asc" } }],
     select: {
       id: true,
       semesterNum: true,
+      semesterId: true,
+      semester: { select: { id: true, academicYear: true, period: true } },
       course: { select: { id: true, code: true, name: true } },
       group: { select: { id: true, number: true, studyYear: true, specialty: { select: { name: true } } } },
       _count: { select: { grades: true } },
     },
   });
 
-  const coursesMap = new Map<number, { id: number; code: string; name: string; courseGroups: typeof courseGroups }>();
+  const semesterMap = new Map<number, { id: number; name: string; courses: Map<number, { id: number; code: string; name: string; courseGroups: typeof courseGroups }> }>();
+
   for (const cg of courseGroups) {
-    if (!coursesMap.has(cg.course.id)) {
-      coursesMap.set(cg.course.id, { ...cg.course, courseGroups: [] });
+    if (!semesterMap.has(cg.semesterId)) {
+      semesterMap.set(cg.semesterId, {
+        id: cg.semesterId,
+        name: `${cg.semester.academicYear} ${cg.semester.period}`,
+        courses: new Map(),
+      });
     }
-    coursesMap.get(cg.course.id)!.courseGroups.push(cg);
+    const semEntry = semesterMap.get(cg.semesterId)!;
+    if (!semEntry.courses.has(cg.course.id)) {
+      semEntry.courses.set(cg.course.id, { ...cg.course, courseGroups: [] });
+    }
+    semEntry.courses.get(cg.course.id)!.courseGroups.push(cg);
   }
 
-  return { data: { semester: { ...currentSemester, name: `${currentSemester.academicYear} ${currentSemester.period}` }, courses: Array.from(coursesMap.values()) } };
+  const semesters = Array.from(semesterMap.values()).map((s) => ({
+    id: s.id,
+    name: s.name,
+    courses: Array.from(s.courses.values()),
+  }));
+
+  return { data: { semesters } };
 }
 
 export async function getStudentsForCourseGroup(
@@ -154,7 +162,7 @@ export async function getMyGrades(
       id: true,
       semesterNum: true,
       semesterId: true,
-      semester: { select: { id: true, academicYear: true, period: true } },
+      semester: { select: { id: true, academicYear: true, period: true, startDate: true } },
       course: { select: { id: true, code: true, name: true, credits: true } },
       academicStaff: { select: { firstName: true, lastName: true, role: true } },
       grades: {
@@ -165,13 +173,14 @@ export async function getMyGrades(
     orderBy: [{ semesterNum: "asc" }],
   });
 
-  const semesterMap = new Map<string, { semester: { id: number; name: string; period: string }; curriculumSemester: number; grades: unknown[] }>();
+  const semesterMap = new Map<string, { semester: { id: number; name: string; period: string }; startDate: Date; curriculumSemester: number; grades: unknown[] }>();
 
   for (const cg of courseGroups) {
-    const key = `${cg.semester.id}-${cg.semesterNum}`;
+    const key = `${cg.semester.id}`;
     if (!semesterMap.has(key)) {
       semesterMap.set(key, {
         semester: { id: cg.semester.id, name: `${cg.semester.academicYear} ${cg.semester.period}`, period: cg.semester.period },
+        startDate: cg.semester.startDate,
         curriculumSemester: cg.semesterNum,
         grades: [],
       });
@@ -184,7 +193,7 @@ export async function getMyGrades(
     });
   }
 
-  const semesters = Array.from(semesterMap.values()).sort((a, b) => a.curriculumSemester - b.curriculumSemester);
+  const semesters = Array.from(semesterMap.values()).sort((a, b) => b.startDate.getTime() - a.startDate.getTime());
 
   return { data: { semesters } };
 }

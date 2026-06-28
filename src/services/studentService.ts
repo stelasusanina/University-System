@@ -1,4 +1,5 @@
 import { prisma } from "../prisma.ts";
+import { getBuildingNumberFromRoom } from "../utils/buildingUtils.ts";
 
 export async function getStudentProgram(userId: number): Promise<{ error: string; status: number } | { data: Record<string, unknown> }> {
   const user = await prisma.user.findUnique({
@@ -40,16 +41,6 @@ export async function getStudentProgram(userId: number): Promise<{ error: string
     return { error: "Няма активен семестър", status: 404 };
   }
 
-  function getBuildingNumberFromRoom(room: string): number | null {
-    const digits = room.replace(/\D/g, "");
-    if (digits.length === 5) {
-      return parseInt(digits.substring(0, 2), 10);
-    }
-    if (digits.length === 4) {
-      return parseInt(digits.charAt(0), 10);
-    }
-    return null;
-  }
 
   const buildings = await prisma.building.findMany({
     select: { number: true, name: true, address: true, latitude: true, longitude: true, googleMapsUrl: true },

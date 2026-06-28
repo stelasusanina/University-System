@@ -71,7 +71,13 @@ export default function ManageAnnouncementsPage() {
     setMessage(a.message);
     setType(a.type);
     setValidTo(dayjs(a.validTo).format("YYYY-MM-DDTHH:mm"));
-    setCourseGroupId("");
+    if (a.courseGroup?.id && a.courseGroup.group) {
+      setSelectedGroupKey(`${a.courseGroup.group.studyYear}-${a.courseGroup.group.number}`);
+      setCourseGroupId(a.courseGroup.id);
+    } else {
+      setSelectedGroupKey("");
+      setCourseGroupId("");
+    }
     setEditingId(a.id);
     setFormError("");
     setShowForm(true);

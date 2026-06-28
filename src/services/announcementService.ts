@@ -114,6 +114,7 @@ export async function getAnnouncementsForUser(
         updatedAt: true,
         courseGroup: {
           select: {
+            id: true,
             course: { select: { code: true, name: true } },
             group: { select: { number: true, studyYear: true, specialty: { select: { name: true } } } },
           },

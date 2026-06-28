@@ -45,7 +45,7 @@
 }
 
 .grades-semester-name {
-  font-size: 1.1rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #1a1a2e;
 }
@@ -58,7 +58,7 @@
 .grades-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.92rem;
+  font-size: 0.80rem;
   background: #fff;
   border-radius: 8px;
   overflow: hidden;
@@ -87,8 +87,24 @@
   border-bottom: 1px solid #f0f0f0;
   color: #333;
   vertical-align: middle;
-  text-overflow: ellipsis;
+}
+
+.grades-table td:nth-child(2) {
+  overflow-x: auto;
   white-space: nowrap;
+}
+
+.grades-table td:nth-child(2)::-webkit-scrollbar {
+  height: 3px;
+}
+
+.grades-table td:nth-child(2)::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.grades-table td:nth-child(2)::-webkit-scrollbar-thumb {
+  background: #c7d2f5;
+  border-radius: 2px;
 }
 
 .grades-table tr:last-child td {

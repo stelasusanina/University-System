@@ -15,8 +15,8 @@ function gradeColor(grade: number) {
 }
 
 function StaffGradesView() {
-  const [courses, setCourses] = useState<CourseWithGroups[]>([]);
-  const [semesterName, setSemesterName] = useState("");
+  const [semesters, setSemesters] = useState<{ id: number; name: string; courses: CourseWithGroups[] }[]>([]);
+  const [openSemester, setOpenSemester] = useState<number | null>(null);
   const [openCourse, setOpenCourse] = useState<number | null>(null);
   const [openCourseGroup, setOpenCourseGroup] = useState<number | null>(null);
   const [students, setStudents] = useState<Record<number, StudentRow[]>>({});
@@ -27,8 +27,11 @@ function StaffGradesView() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get<{ semester: { name: string }; courses: CourseWithGroups[] }>("/grades/courses")
-      .then((res) => { setSemesterName(res.semester.name); setCourses(res.courses); })
+    api.get<{ semesters: { id: number; name: string; courses: CourseWithGroups[] }[] }>("/grades/courses")
+      .then((res) => {
+        setSemesters(res.semesters);
+        if (res.semesters.length > 0) setOpenSemester(res.semesters[0].id);
+      })
       .catch(() => setError("Неуспешно зареждане на дисциплини"))
       .finally(() => setLoading(false));
   }, []);
@@ -82,109 +85,121 @@ function StaffGradesView() {
   return (
     <div className="grades-section">
       <h2>Оценки</h2>
-      {semesterName && <p className="semester-label">{semesterName}</p>}
       {error && <div className="error-message">{error}</div>}
       {loading && <p className="loading-text">Зареждане…</p>}
 
-      {!loading && courses.length === 0 && (
-        <p className="empty-text">Няма дисциплини за този семестър.</p>
+      {!loading && semesters.length === 0 && (
+        <p className="empty-text">Няма дисциплини.</p>
       )}
 
-      <div className="course-accordion">
-        {courses.map((course) => (
-          <div key={course.id} className="accordion-item">
-            <button
-              type="button"
-              className="accordion-trigger"
-              onClick={() => setOpenCourse((prev) => (prev === course.id ? null : course.id))}
-            >
-              <span className="accordion-course-code">{course.code}</span>
-              <span className="accordion-course-name">{course.name}</span>
-              <span className="accordion-count">{course.courseGroups.length} групи</span>
-              <span className="accordion-chevron">{openCourse === course.id ? "▲" : "▼"}</span>
-            </button>
+      {semesters.map((sem) => (
+        <div key={sem.id} className="grades-semester-block">
+          <button
+            type="button"
+            className="grades-semester-header grades-semester-toggle"
+            onClick={() => setOpenSemester(openSemester === sem.id ? null : sem.id)}
+          >
+            <span className="grades-semester-name">{sem.name}</span>
+            <span className="accordion-chevron">{openSemester === sem.id ? "▲" : "▼"}</span>
+          </button>
 
-            {openCourse === course.id && (
-              <div className="accordion-body">
-                {course.courseGroups.map((cg) => (
-                  <div key={cg.id} className="accordion-item">
-                    <button
-                      type="button"
-                      className="accordion-trigger"
-                      onClick={() => openGroup(cg.id)}
-                    >
-                      <span className="accordion-course-name">
-                        {cg.group.specialty.name} · Курс {cg.group.studyYear} · Група {cg.group.number}
-                      </span>
-                      <span className="accordion-meta">Сем. {cg.semesterNum}</span>
-                      <span className="accordion-count">{cg._count.grades} оценки</span>
-                      <span className="accordion-chevron">{openCourseGroup === cg.id ? "▲" : "▼"}</span>
-                    </button>
+          {openSemester === sem.id && (
+            <div className="course-accordion">
+              {sem.courses.map((course) => (
+                <div key={course.id} className="accordion-item">
+                  <button
+                    type="button"
+                    className="accordion-trigger"
+                    onClick={() => setOpenCourse((prev) => (prev === course.id ? null : course.id))}
+                  >
+                    <span className="accordion-course-code">{course.code}</span>
+                    <span className="accordion-course-name">{course.name}</span>
+                    <span className="accordion-count">{course.courseGroups.length} групи</span>
+                    <span className="accordion-chevron">{openCourse === course.id ? "▲" : "▼"}</span>
+                  </button>
 
-                    {openCourseGroup === cg.id && (
-                      <div className="accordion-body">
-                        {loadingGroup === cg.id && <p className="loading-text">Зареждане на студенти…</p>}
+                  {openCourse === course.id && (
+                    <div className="accordion-body">
+                      {course.courseGroups.map((cg) => (
+                        <div key={cg.id} className="accordion-item">
+                          <button
+                            type="button"
+                            className="accordion-trigger"
+                            onClick={() => openGroup(cg.id)}
+                          >
+                            <span className="accordion-course-name">
+                              {cg.group.specialty.name} · Курс {Math.ceil(cg.semesterNum / 2)} · Група {cg.group.number}
+                            </span>
+                            <span className="accordion-chevron">{openCourseGroup === cg.id ? "▲" : "▼"}</span>
+                          </button>
 
-                        {students[cg.id] && students[cg.id].length === 0 && (
-                          <p className="empty-text">Няма записани студенти.</p>
-                        )}
+                          {openCourseGroup === cg.id && (
+                            <div className="accordion-body">
+                              {loadingGroup === cg.id && <p className="loading-text">Зареждане на студенти…</p>}
 
-                        {students[cg.id] && students[cg.id].length > 0 && (
-                          <table className="grades-table">
-                            <thead>
-                              <tr>
-                                <th>Фак. №</th>
-                                <th>Ime</th>
-                                <th>Оценка</th>
-                                <th></th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {students[cg.id].map((s) => {
-                                const key = `${s.id}-${cg.id}`;
-                                return (
-                                  <tr key={s.id}>
-                                    <td className="grade-faculty-num">{s.facultyNumber}</td>
-                                    <td>{s.firstName} {s.lastName}</td>
-                                    <td>
-                                      <input
-                                        className="grade-input"
-                                        type="number"
-                                        min={2}
-                                        max={6}
-                                        step={0.1}
-                                        placeholder="—"
-                                        value={editGrade[key] ?? ""}
-                                        onChange={(ev) =>
-                                          setEditGrade((prev) => ({ ...prev, [key]: ev.target.value }))
-                                        }
-                                      />
-                                    </td>
-                                    <td>
-                                      <button
-                                        type="button"
-                                        className="btn-primary grade-save-btn"
-                                        disabled={saving === key}
-                                        onClick={() => handleSave(s.id, cg.id)}
-                                      >
-                                        {saving === key ? "…" : "Запази"}
-                                      </button>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+                              {students[cg.id] && students[cg.id].length === 0 && (
+                                <p className="empty-text">Няма записани студенти.</p>
+                              )}
+
+                              {students[cg.id] && students[cg.id].length > 0 && (
+                                <table className="grades-table">
+                                  <thead>
+                                    <tr>
+                                      <th>Фак. №</th>
+                                      <th>Имена</th>
+                                      <th>Оценка</th>
+                                      <th></th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {students[cg.id].map((s) => {
+                                      const key = `${s.id}-${cg.id}`;
+                                      return (
+                                        <tr key={s.id}>
+                                          <td className="grade-faculty-num">{s.facultyNumber}</td>
+                                          <td>{s.firstName} {s.lastName}</td>
+                                          <td>
+                                            <input
+                                              className="grade-input"
+                                              type="number"
+                                              min={2}
+                                              max={6}
+                                              step={0.1}
+                                              placeholder="—"
+                                              value={editGrade[key] ?? ""}
+                                              onChange={(ev) =>
+                                                setEditGrade((prev) => ({ ...prev, [key]: ev.target.value }))
+                                              }
+                                            />
+                                          </td>
+                                          <td>
+                                            <button
+                                              type="button"
+                                              className="btn-primary grade-save-btn"
+                                              disabled={saving === key}
+                                              onClick={() => handleSave(s.id, cg.id)}
+                                            >
+                                              {saving === key ? "…" : "Запази"}
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -250,7 +265,7 @@ function StudentGradesView() {
                       <td><span className="accordion-course-code">{e.course.code}</span></td>
                       <td>{e.course.name}</td>
                       <td>{e.course.credits}</td>
-                      <td>{ROLE_LABELS[e.course.academicStaff.role] ?? e.course.academicStaff.role} {e.course.academicStaff.lastName}</td>
+                      <td>{ROLE_LABELS[e.course.academicStaff.role] ?? e.course.academicStaff.role} {e.course.academicStaff.firstName} {e.course.academicStaff.lastName}</td>
                       <td>
                         {e.finalGrade != null ? (
                           <span className={`grade-value ${gradeColor(e.finalGrade)}`}>
