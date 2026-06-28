@@ -224,8 +224,14 @@ export async function getStaffFormOptions(
     return { error: "Само академичен персонал може да достъпва тези опции", status: 403 };
   }
 
+  const currentSemester = await prisma.semester.findFirst({
+    where: { isCurrent: true },
+    orderBy: [{ startDate: "desc" }],
+    select: { id: true },
+  });
+
   const courseGroups = await prisma.courseGroup.findMany({
-    where: { academicStaffId: user.academicStaff.id },
+    where: { academicStaffId: user.academicStaff.id, ...(currentSemester && { semesterId: currentSemester.id }) },
     select: {
       id: true,
       semesterNum: true,
